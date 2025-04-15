@@ -17,7 +17,7 @@ The core idea of **Sentra** is to create a roleplay chatbot experience that feel
 ---
 
 ## 📦 Repository Layout
-
+```
 sentra/
 │
 ├── backend/                    # Firebase Cloud Functions and server logic
@@ -39,7 +39,7 @@ sentra/
 ├── README.md                   # This file
 ├── firebase.json               # Firebase hosting and functions configuration
 └── package.json                # Project dependencies and scripts
-
+```
 ---
 
 ## 🔍 Features in Development
@@ -71,3 +71,43 @@ sentra/
 - **Backend**: Firebase Cloud Functions, Firestore
 - **Auth & Hosting**: Firebase Authentication, Firebase Hosting
 - **AI**: OpenAI GPT-based chat integration
+
+## For Sentra developers do the following to setup:
+
+- Find an empty directory
+```bash
+   git clone https://github.com/Yuzhifur/Sentra-Chatbot.git
+```
+- cd into Sentra-Chatbot
+```bash
+   cd Sentra-Chatbot
+```
+
+- Create your own developer's branch
+```bash
+   git branch <yourname>
+```
+
+- When making changes, switch to your branch
+```bash
+   git checkout <yourname>
+```
+
+- When commit
+```bash
+   git add .
+   git commit -m "<message>"
+```
+
+- When push to remote your own branch
+```bash
+    git push origin <yourname>
+```
+
+- When push to remote your main branch (always do this after push to your own branch)
+```bash
+    git checkout main
+    git merge <yourname>
+    git push origin main
+    git checkout <yourname>
+```
