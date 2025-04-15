@@ -68,7 +68,7 @@ sentra/
 
 - **Frontend**: React, Tailwind CSS
 - **Backend**: Firebase Authenticaltion, Functions, Firestore
-- **AI**: Language model API provided by OpenAI, Claude, Deepseek, etc.
+- **AI**: Language model API provided by OpenAI, Anthropic, Deepseek, etc.
 
 ---
 
