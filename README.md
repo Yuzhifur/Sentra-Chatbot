@@ -61,16 +61,14 @@ sentra/
 ## ⚠️ Risks and Limitations
 
 - While we are adding unique features to improve realism and continuity, it's possible that engagement and immersion still fall short of user expectations.
-- Implementation challenges may arise from managing memory and social graph complexities efficiently.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React, Tailwind CSS
-- **Backend**: Firebase Cloud Functions, Firestore
-- **Auth & Hosting**: Firebase Authentication, Firebase Hosting
-- **AI**: OpenAI GPT-based chat integration
+- **Backend**: Firebase Authenticaltion, Functions, Firestore
+- **AI**: Language model API provided by OpenAI, Claude, Deepseek, etc.
 
 ---
 
