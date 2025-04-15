@@ -72,6 +72,8 @@ sentra/
 - **Auth & Hosting**: Firebase Authentication, Firebase Hosting
 - **AI**: OpenAI GPT-based chat integration
 
+---
+
 ## For Sentra developers do the following to setup:
 
 - Find an empty directory
@@ -88,9 +90,10 @@ sentra/
    git branch <yourname>
 ```
 
-- When making changes, switch to your branch
+- When making changes, switch to your branch and pull
 ```bash
    git checkout <yourname>
+   git pull origin main
 ```
 
 - When commit
