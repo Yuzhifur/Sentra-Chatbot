@@ -41,7 +41,7 @@
     "apphosting": {
       "port": 5002,
       "rootDirectory": "./",
-      "startCommand": "npm run dev"
+      "startCommand": "npm run build"
     },
     "auth": {
       "port": 9099
