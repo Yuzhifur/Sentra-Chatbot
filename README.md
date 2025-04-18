@@ -72,7 +72,7 @@ sentra/
 
 ---
 
-## For Sentra developers do the following to setup:
+## Developers use the following workflow:
 
 - Find an empty directory
 ```bash
@@ -112,3 +112,58 @@ sentra/
     git push origin main
     git checkout <yourname>
 ```
+
+---
+
+## Setup Firebase (you only need to do this once):
+Make sure you have Firebase account ready, and have node version 22.
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Install firebase CLI:
+   ```bash
+   npm install firebase -g tools
+   ```
+
+3. Login into firebase
+   ```bash
+   firebase login
+   ```
+
+4. Initialize firebase configurations
+   - Make sure only one person in team runs this and push changes, other members pull from repo
+   ```bash
+   firebase init
+   ```
+
+5. Create a `.env.local` file in the project root:
+   - Fill in your Firebase project credentials as NEXT_PUBLIC_FIREBASE_API_KEY
+   - This can be found in project settings in Firebase console
+
+---
+
+## Full Build Instruction:
+
+1. Start the development server:
+   ```bash
+   npm start
+   ```
+
+2. Build for production:
+   ```bash
+   npm run build
+   ```
+
+3. Emulate and test:
+   ```bash
+   firebase emulators:start --only hosting,auth,firestore,functions,storage
+   ```
+   Open the emulated hosting in private browsing (with empty browser cache).
+
+4. Deploy to Firebase:
+   ```bash
+   firebase deploy
+   ```

@@ -10,7 +10,7 @@ const Dotenv = require('dotenv-webpack');
 
 
 const info = {
-  TITLE: 'Mountain Xifu - Roleplay Chatbot'
+  TITLE: 'Sentra'
 }
 
 const config = {
