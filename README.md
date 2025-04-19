@@ -125,7 +125,7 @@ Make sure you have Firebase account ready, and have node version 22.
 
 2. Install firebase CLI:
    ```bash
-   npm install firebase -g tools
+   npm install -g firebase-tools
    ```
 
 3. Login into firebase
