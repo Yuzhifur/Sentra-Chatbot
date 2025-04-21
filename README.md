@@ -20,21 +20,26 @@ The core idea of **Sentra** is to create a roleplay chatbot experience that feel
 ```
 sentra/
 │
-├── backend/                    # Firebase Cloud Functions and server logic
-│   ├── functions/             # Main cloud function handlers (chat, memory, notifications)
-│   └── firestore.rules        # Firestore security rules
+├── funcions/                    # Firebase Cloud Functions and server logic
+│   └── src/
+│       └── index.tsx
+├── public/                      # Frontend files built and to be served
+│   └── index.html
 │
-├── frontend/                   # React frontend code
+├── src/                       # React frontend code
 │   ├── components/            # Reusable React components (chat window, character card, etc.)
 │   ├── pages/                 # Page-level React components (home, chat, character creation)
-│   └── styles/                # CSS or Tailwind styles
+│   ├── index.tsx              # Upper-most tsx file that contains firebase app credentials
+│   ├── index.html             # Firebase default welcome page (will be overwritten by react)
+│   ├── App.tsx                # Main page of the app that connects to all other pages
+│   └── App.css                # CSS for App.tsx
 │
 │
-├── docs/                       # Project documentation (feature specs, design drafts, research notes)
+├── Sentra_proposal.pdf         # Project documentation (feature specs, design drafts, research notes)
 │
 ├── public/                     # Static files (favicon, images)
 │
-├── .env                        # Environment variables
+├── .local.env                  # Environment variables
 ├── .gitignore
 ├── README.md                   # This file
 ├── firebase.json               # Firebase hosting and functions configuration
