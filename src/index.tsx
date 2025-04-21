@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -32,6 +33,11 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
+
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6LcCxB8rAAAAAARP0L6WZ_oDKY8MUyXvGznMxFO7'),
+  isTokenAutoRefreshEnabled: true
+});
 
 if (window.location.hostname === 'localhost') {
   console.log('Using Firebase emulators');
