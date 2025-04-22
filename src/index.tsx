@@ -34,12 +34,17 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-const appCheck = initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider('6LcCxB8rAAAAAARP0L6WZ_oDKY8MUyXvGznMxFO7'),
-  isTokenAutoRefreshEnabled: true
-});
+let appCheck;
+if (window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1') {
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider('6LcCxB8rAAAAAARP0L6WZ_oDKY8MUyXvGznMxFO7'),
+    isTokenAutoRefreshEnabled: true
+  });
+}
 
-if (window.location.hostname === 'localhost') {
+if (window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1') {
   console.log('Using Firebase emulators');
   connectFirestoreEmulator(db, 'localhost', 8081);
   connectAuthEmulator(auth, 'http://localhost:9099');
