@@ -105,17 +105,25 @@ sentra/
    git commit -m "<message>"
 ```
 
+- Before push to remote your own branch, resolve any conflicts in this step
+```bash
+   git pull --rebase origin main
+
+   git add <resolved-files>
+   git rebase --continue
+```
+
 - When push to remote your own branch
 ```bash
-    git push origin <yourname>
+   git push origin <yourname>
 ```
 
 - When push to remote your main branch (always do this after push to your own branch)
 ```bash
-    git checkout main
-    git merge <yourname>
-    git push origin main
-    git checkout <yourname>
+   git checkout main
+   git merge <yourname>
+   git push origin main
+   git checkout <yourname>
 ```
 
 ---
