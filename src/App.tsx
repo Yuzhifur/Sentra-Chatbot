@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
+import { CreateCharacter } from './pages/CreateCharacter';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
@@ -12,7 +13,7 @@ type AppState = {
   user: User | null;
   loading: boolean;
   authView: 'login' | 'createAccount' | 'resetPassword';
-  dashboardContent: 'default' | 'other'; // Can add more content types as needed
+  dashboardContent: 'default' | 'createCharacter' | 'other'; // Can add more content types as needed
 };
 
 export class App extends Component<AppProps, AppState> {
@@ -60,6 +61,10 @@ export class App extends Component<AppProps, AppState> {
     this.setState({ dashboardContent: 'default' });
   };
 
+  doSwitchToCreateCharacter = () => {
+    this.setState({ dashboardContent: 'createCharacter' });
+  };
+
   renderAuthContent() {
     const { authView } = this.state;
 
@@ -82,12 +87,20 @@ export class App extends Component<AppProps, AppState> {
 
     // Currently only have default content, but can expand this switch statement in the future
     switch (dashboardContent) {
+      case 'createCharacter':
+        return <CreateCharacter doResetDashboard={this.doResetDashboard}></CreateCharacter>
       case 'default':
       default:
         return (
           <div className="dashboard">
             <h1>Welcome, {user?.email}</h1>
             <p>Main dashboard content will go here.</p>
+            <button
+              onClick={() => this.doSwitchToCreateCharacter}
+              className="create-character-button"
+            >
+              Create Character
+            </button>
             <button
               onClick={() => getAuth().signOut()}
               className="logout-button"
