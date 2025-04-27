@@ -83789,8 +83789,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pages_Login__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pages/Login */ "./src/pages/Login.tsx");
 /* harmony import */ var _pages_CreateAccount__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./pages/CreateAccount */ "./src/pages/CreateAccount.tsx");
 /* harmony import */ var _pages_ResetPassword__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./pages/ResetPassword */ "./src/pages/ResetPassword.tsx");
-/* harmony import */ var _components_Sidebar__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/Sidebar */ "./src/components/Sidebar.tsx");
-/* harmony import */ var _App_css__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./App.css */ "./src/App.css");
+/* harmony import */ var _pages_Chat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./pages/Chat */ "./src/pages/Chat.tsx");
+/* harmony import */ var _components_Sidebar__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./components/Sidebar */ "./src/components/Sidebar.tsx");
+/* harmony import */ var _App_css__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./App.css */ "./src/App.css");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -83825,10 +83826,18 @@ var __assign = (undefined && undefined.__assign) || function () {
 
 
 
+
 var App = /** @class */ (function (_super) {
     __extends(App, _super);
     function App(props) {
         var _this = _super.call(this, props) || this;
+        // This is an experiment
+        _this.doSwitchToMainPage = function () {
+            _this.setState({ dashboardContent: 'default' });
+        };
+        _this.doSwitchToChatPage = function () {
+            _this.setState({ dashboardContent: 'chat' });
+        };
         _this.doSwitchToLogin = function () {
             _this.setState({ authView: 'login' });
         };
@@ -83845,7 +83854,7 @@ var App = /** @class */ (function (_super) {
             user: null,
             loading: true,
             authView: 'login',
-            dashboardContent: 'default'
+            dashboardContent: 'default',
         };
         return _this;
     }
@@ -83882,9 +83891,11 @@ var App = /** @class */ (function (_super) {
         var _a = this.state, user = _a.user, dashboardContent = _a.dashboardContent;
         // Currently only have default content, but can expand this switch statement in the future
         switch (dashboardContent) {
+            case 'chat':
+                return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_pages_Chat__WEBPACK_IMPORTED_MODULE_6__.Chat, { return: this.doSwitchToMainPage });
             case 'default':
             default:
-                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", __assign({ className: "dashboard" }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("h1", { children: ["Welcome, ", user === null || user === void 0 ? void 0 : user.email] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { children: "Main dashboard content will go here." }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({ onClick: function () { return (0,firebase_auth__WEBPACK_IMPORTED_MODULE_2__.getAuth)().signOut(); }, className: "logout-button" }, { children: "Sign Out" }))] })));
+                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", __assign({ className: "dashboard" }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("h1", { children: ["Welcome, ", user === null || user === void 0 ? void 0 : user.email] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { children: "Main dashboard content will go here." }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({ onClick: function () { return (0,firebase_auth__WEBPACK_IMPORTED_MODULE_2__.getAuth)().signOut(); }, className: "logout-button" }, { children: "Sign Out" })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({ onClick: this.doSwitchToChatPage, className: "chat" }, { children: "Go Chat" }))] })));
         }
     };
     App.prototype.renderContent = function () {
@@ -83895,7 +83906,7 @@ var App = /** @class */ (function (_super) {
         if (!user) {
             return this.renderAuthContent();
         }
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", __assign({ className: "dashboard-container" }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_Sidebar__WEBPACK_IMPORTED_MODULE_6__["default"], { doResetDashboard: this.doResetDashboard }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({ className: "main-content" }, { children: this.renderDashboardContent() }))] })));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", __assign({ className: "dashboard-container" }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_Sidebar__WEBPACK_IMPORTED_MODULE_7__["default"], { doResetDashboard: this.doResetDashboard }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({ className: "main-content" }, { children: this.renderDashboardContent() }))] })));
     };
     App.prototype.render = function () {
         return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({ className: "app" }, { children: this.renderContent() })));
@@ -84094,6 +84105,215 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 
 
        /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_Auth_css__WEBPACK_IMPORTED_MODULE_6__["default"] && _node_modules_css_loader_dist_cjs_js_Auth_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals ? _node_modules_css_loader_dist_cjs_js_Auth_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals : undefined);
+
+
+/***/ }),
+
+/***/ "./src/pages/Chat.tsx":
+/*!****************************!*\
+  !*** ./src/pages/Chat.tsx ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Chat: () => (/* binding */ Chat)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var firebase_firestore__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/firestore */ "./node_modules/firebase/firestore/dist/esm/index.esm.js");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+
+
+
+var Chat = /** @class */ (function (_super) {
+    __extends(Chat, _super);
+    function Chat(props) {
+        var _this = _super.call(this, props) || this;
+        _this.componentDidMount = function () { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.loadMessages()];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        _this.render = function () {
+            return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", __assign({ style: { maxWidth: "600px", margin: "0 atuto", padding: "1rem" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("h1", { children: "Welcome to Chat Interface" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({ onClick: _this.doReturnClick }, { children: "Home" })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({ style: {
+                            border: "1px solid #ccc",
+                            height: "400px",
+                            overflowY: "auto",
+                            padding: "1rem",
+                            marginTop: "1rem",
+                            backgroundColor: "#f9f9f9"
+                        } }, { children: _this.state.messages.map(function (msg, idx) { return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("p", __assign({ style: { margin: "0.5rem 0" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("b", { children: msg.role }), " ", msg.content] }), idx)); }) })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("form", __assign({ onSubmit: _this.handleSubmit, style: { marginTop: "1rem", display: "flex" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { type: "text", value: _this.state.input, onChange: _this.handleInputChange, placeholder: "Type your message...", style: { flex: 1, padding: "0.5rem", fontSize: "1rem" } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({ type: "submit", style: { marginLeft: "0.5rem", padding: "0.5rem 1rem", fontSize: "1rem" } }, { children: "Send" }))] }))] }));
+        };
+        _this.doReturnClick = function (_evt) {
+            _this.props.return();
+        };
+        _this.handleInputChange = function (evt) {
+            _this.setState({ input: evt.target.value });
+        };
+        _this.handleSubmit = function (evt) { return __awaiter(_this, void 0, void 0, function () {
+            var newMessage;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        evt.preventDefault();
+                        newMessage = this.state.input.trim();
+                        if (!(newMessage !== "")) return [3 /*break*/, 2];
+                        // Local update first
+                        this.setState(function (prevState) { return ({
+                            messages: __spreadArray(__spreadArray([], prevState.messages, true), [{ role: "user", content: newMessage }], false),
+                            input: ""
+                        }); });
+                        // Then save to Firestore
+                        return [4 /*yield*/, this.saveMessageToFirestore(newMessage)];
+                    case 1:
+                        // Then save to Firestore
+                        _a.sent();
+                        _a.label = 2;
+                    case 2: return [2 /*return*/];
+                }
+            });
+        }); };
+        _this.saveMessageToFirestore = function (content) { return __awaiter(_this, void 0, void 0, function () {
+            var db, sessionDocId, sessionRef, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        db = (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.getFirestore)();
+                        sessionDocId = "default-session";
+                        sessionRef = (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.doc)(db, "chats", sessionDocId);
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 5]);
+                        return [4 /*yield*/, (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.updateDoc)(sessionRef, {
+                                messages: (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.arrayUnion)({ role: "user", content: content }),
+                                updatedAt: (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.serverTimestamp)(),
+                            })];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 3:
+                        err_1 = _a.sent();
+                        return [4 /*yield*/, (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.setDoc)(sessionRef, {
+                                messages: [{ role: "user", content: content }],
+                                createdAt: (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.serverTimestamp)(),
+                                updatedAt: (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.serverTimestamp)()
+                            })];
+                    case 4:
+                        _a.sent();
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        }); };
+        _this.loadMessages = function () { return __awaiter(_this, void 0, void 0, function () {
+            var db, sessionDocId, sessionRef, docSnap, data, messages;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        db = (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.getFirestore)();
+                        sessionDocId = "default-session";
+                        sessionRef = (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.doc)(db, "chats", sessionDocId);
+                        return [4 /*yield*/, (0,firebase_firestore__WEBPACK_IMPORTED_MODULE_2__.getDoc)(sessionRef)];
+                    case 1:
+                        docSnap = _a.sent();
+                        if (docSnap.exists()) {
+                            data = docSnap.data();
+                            messages = data.messages || [];
+                            this.setState({ messages: messages });
+                        }
+                        else {
+                            this.setState({ messages: [] });
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        _this.state = {
+            messages: [],
+            input: ""
+        };
+        return _this;
+    }
+    return Chat;
+}(react__WEBPACK_IMPORTED_MODULE_1__.Component));
+
 
 
 /***/ }),
@@ -84728,4 +84948,4 @@ root.render((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)((react__WEBPA
 
 /******/ })()
 ;
-//# sourceMappingURL=main.b8ca1e57af083d87ecf5.js.map
+//# sourceMappingURL=main.1afcd2d2b1eec86c04b1.js.map

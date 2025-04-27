@@ -3,8 +3,10 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
+import { Chat } from './pages/Chat';
 import Sidebar from './components/Sidebar';
 import './App.css';
+//import {default} from "next";
 
 type AppProps = {};
 
@@ -12,7 +14,9 @@ type AppState = {
   user: User | null;
   loading: boolean;
   authView: 'login' | 'createAccount' | 'resetPassword';
-  dashboardContent: 'default' | 'other'; // Can add more content types as needed
+  dashboardContent: 'default' | 'chat'; // Can add more content types as needed
+
+
 };
 
 export class App extends Component<AppProps, AppState> {
@@ -23,7 +27,7 @@ export class App extends Component<AppProps, AppState> {
       user: null,
       loading: true,
       authView: 'login',
-      dashboardContent: 'default'
+      dashboardContent: 'default',
     };
   }
 
@@ -44,6 +48,17 @@ export class App extends Component<AppProps, AppState> {
     });
   }
 
+
+  // This is an experiment
+  doSwitchToMainPage = (): void => {
+    this.setState({dashboardContent: 'default'})
+  }
+  doSwitchToChatPage = (): void => {
+    this.setState({dashboardContent: 'chat'})
+  }
+
+
+
   doSwitchToLogin = () => {
     this.setState({ authView: 'login' });
   };
@@ -59,6 +74,10 @@ export class App extends Component<AppProps, AppState> {
   doResetDashboard = () => {
     this.setState({ dashboardContent: 'default' });
   };
+
+
+
+
 
   renderAuthContent() {
     const { authView } = this.state;
@@ -82,6 +101,8 @@ export class App extends Component<AppProps, AppState> {
 
     // Currently only have default content, but can expand this switch statement in the future
     switch (dashboardContent) {
+      case 'chat':
+        return <Chat return={this.doSwitchToMainPage}/>
       case 'default':
       default:
         return (
@@ -94,8 +115,13 @@ export class App extends Component<AppProps, AppState> {
             >
               Sign Out
             </button>
+
+            <button onClick={this.doSwitchToChatPage}
+            className="chat">Go Chat</button>
+
           </div>
         );
+
     }
   }
 
