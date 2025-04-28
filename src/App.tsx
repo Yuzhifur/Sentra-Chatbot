@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
 import { Chat } from './pages/Chat';
+import { CharacterCreation } from './pages/CharacterCreation';
 import Sidebar from './components/Sidebar';
 import './App.css';
 //import {default} from "next";
@@ -14,7 +15,7 @@ type AppState = {
   user: User | null;
   loading: boolean;
   authView: 'login' | 'createAccount' | 'resetPassword';
-  dashboardContent: 'default' | 'chat'; // Can add more content types as needed
+  dashboardContent: 'default' | 'chat' | 'character-creation'; // Can add more content types as needed
 
 
 };
@@ -55,6 +56,9 @@ export class App extends Component<AppProps, AppState> {
   }
   doSwitchToChatPage = (): void => {
     this.setState({dashboardContent: 'chat'})
+  }
+  doSwitchToCharacterCreationPage = (): void => {
+    this.setState({dashboardContent: 'character-creation'})
   }
 
 
@@ -103,6 +107,8 @@ export class App extends Component<AppProps, AppState> {
     switch (dashboardContent) {
       case 'chat':
         return <Chat return={this.doSwitchToMainPage}/>
+      case 'character-creation':
+        return <CharacterCreation return={this.doSwitchToMainPage}/>
       case 'default':
       default:
         return (
@@ -118,6 +124,9 @@ export class App extends Component<AppProps, AppState> {
 
             <button onClick={this.doSwitchToChatPage}
             className="chat">Go Chat</button>
+
+            <button onClick={this.doSwitchToCharacterCreationPage}
+            className="chat">Create Character</button>
 
           </div>
         );
