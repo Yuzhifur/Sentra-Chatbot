@@ -10,6 +10,7 @@ body {
 
 .app {
   min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
 .loading {
@@ -23,12 +24,9 @@ body {
 
 .dashboard-container {
   display: flex;
-}
-
-.main-content {
-  margin-left: 250px; /* Same as sidebar width */
-  flex: 1;
-  min-height: 100vh;
+  flex-direction: row;
+  align-items: stretch;
+  height: 100vh;
 }
 
 .dashboard {
@@ -42,17 +40,58 @@ body {
   color: #333;
 }
 
-.logout-button {
+.dashboard p {
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.logout-button, .chat {
   margin-top: 20px;
-  padding: 8px 16px;
-  background-color: #f44336;
+  padding: 10px 16px;
+  background-color: #4285f4;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.logout-button {
+  background-color: #f44336;
 }
 
 .logout-button:hover {
   background-color: #d32f2f;
+}
+
+.chat:hover {
+  background-color: #3367d6;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  margin-right: 10px;
+}
+
+button:hover {
+  background-color: #3367d6;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  margin-left: 130px;
 }
