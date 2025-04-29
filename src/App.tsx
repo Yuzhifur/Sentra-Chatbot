@@ -53,9 +53,6 @@ export class App extends Component<AppProps, AppState> {
   doSwitchToChatPage = (): void => {
     this.setState({dashboardContent: 'chat'})
   }
-  doSwitchToCharacterCreationPage = (): void => {
-    this.setState({dashboardContent: 'character-creation'})
-  }
 
   doSwitchToCharacterCreation = (): void => {
     this.setState({dashboardContent: 'characterCreation'})
