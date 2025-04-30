@@ -126,6 +126,11 @@ sentra/
    git checkout <yourname>
 ```
 
+- If you are absolutely sure that conflicts were resolved in your own branch, but failed to git merge <yourname>
+```bash
+   git merge <yourname> --strategy-option theirs
+```
+
 ---
 
 ## Setup Firebase (you only need to do this once):
