@@ -24,12 +24,9 @@ body {
 
 .dashboard-container {
   display: flex;
-}
-
-.main-content {
-  margin-left: 280px; /* Same as sidebar width */
-  flex: 1;
-  min-height: 100vh;
+  flex-direction: row;
+  align-items: stretch;
+  height: 100vh;
 }
 
 .dashboard {
@@ -86,4 +83,15 @@ button {
 
 button:hover {
   background-color: #3367d6;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  margin-left: 130px;
 }
