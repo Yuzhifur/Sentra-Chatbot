@@ -1,9 +1,9 @@
-.profile-page {
+.user-profile-page {
   display: flex;
   height: 100vh;
 }
 
-.main-content {
+.user-main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -14,7 +14,7 @@
   overflow-y: auto;
 }
 
-.avatar {
+.user-avatar {
   width: 6rem;
   height: 6rem;
   border-radius: 50%;
@@ -27,13 +27,13 @@
   font-weight: bold;
 }
 
-.username {
+.user-username {
   margin-top: 1rem;
   font-size: 1.5rem;
   font-weight: bold;
 }
 
-.stats {
+.user-stats {
   margin-top: 0.5rem;
   color: #718096;
   font-size: 0.875rem;
@@ -41,13 +41,13 @@
   gap: 0.5rem;
 }
 
-.settings-buttons {
+.user-settings-buttons {
   display: flex;
   gap: 1rem;
   margin-top: 1.5rem;
 }
 
-.settings-button {
+.user-settings-button {
   padding: 0.5rem 1rem;
   background-color: #d1d5db;
   border: none;
@@ -57,18 +57,18 @@
   transition: background-color 0.2s;
 }
 
-.settings-button:hover {
+.user-settings-button:hover {
   background-color: #9ca3af;
 }
 
-.tabs {
+.user-tabs {
   display: flex;
   gap: 1.5rem;
   margin-top: 2.5rem;
   color: #374151;
 }
 
-.tab {
+.user-tab {
   background: none;
   border: none;
   font-size: 1rem;
@@ -76,12 +76,12 @@
   padding-bottom: 0.25rem;
 }
 
-.tab.active {
+.user-tab.active {
   font-weight: bold;
   border-bottom: 2px solid #374151;
 }
 
-.empty-state {
+.user-empty-state {
   margin-top: 2.5rem;
   color: #6b7280;
   text-align: center;

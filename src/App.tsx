@@ -4,8 +4,10 @@ import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
 import { Chat } from './pages/Chat';
-import { Home } from './pages/Home';
+import  Home from './pages/Home';
 import Sidebar from './components/Sidebar';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import UserProfile from './pages/UserProfile';
 import './App.css';
 
 type AppProps = {};
@@ -92,24 +94,27 @@ export class App extends Component<AppProps, AppState> {
   }
 
   renderDashboardContent() {
-    const { user, dashboardContent } = this.state;
+    const { user,  dashboardContent } = this.state;
 
-    switch (dashboardContent) {
-      case 'chat':
-        return <Chat return={this.doSwitchToMainPage}/>;
-      case 'characterCreation':
-        // Character creation component will be implemented later
-        return (
-          <div className="dashboard">
-            <h1>Character Creation</h1>
-            <p>Character creation interface will go here.</p>
-            <button onClick={this.doSwitchToMainPage}>Back to Home</button>
-          </div>
-        );
-      case 'default':
-      default:
-        return <Home />;
-    }
+    return (
+      <div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
+        <Route
+          path="/character-creation"
+          element={
+            <div className="dashboard">
+              <h1>Character Creation</h1>
+              <p>Character creation interface will go here.</p>
+              <button onClick={this.doSwitchToMainPage}>Back to Home</button>
+            </div>
+          }
+        />
+      </Routes>
+      </div>
+    );
   }
 
   renderContent() {
@@ -128,10 +133,27 @@ export class App extends Component<AppProps, AppState> {
         <div className='sidebar'>
           <Sidebar doResetDashboard={this.doResetDashboard} />
         </div>
-
         <div className="main-content">
+        <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
+        <Route
+          path="/character-creation"
+          element={
+            <div className="dashboard">
+              <h1>Character Creation</h1>
+              <p>Character creation interface will go here.</p>
+              <button onClick={this.doSwitchToMainPage}>Back to Home</button>
+            </div>
+          }
+        />
+      </Routes>
+
+        {/* <div className="main-view">
           {this.renderDashboardContent()}
-        </div>
+        </div> */}
+      </div>
       </div>
     );
   }
