@@ -3,7 +3,8 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
-import { CreateCharacter } from './pages/CreateCharacter';
+import { Chat } from './pages/Chat';
+import { Home } from './pages/Home';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
@@ -13,7 +14,7 @@ type AppState = {
   user: User | null;
   loading: boolean;
   authView: 'login' | 'createAccount' | 'resetPassword';
-  dashboardContent: 'default' | 'createCharacter' | 'other'; // Can add more content types as needed
+  dashboardContent: 'default' | 'chat' | 'characterCreation'; // Added new content type
 };
 
 export class App extends Component<AppProps, AppState> {
@@ -24,7 +25,7 @@ export class App extends Component<AppProps, AppState> {
       user: null,
       loading: true,
       authView: 'login',
-      dashboardContent: 'default'
+      dashboardContent: 'default',
     };
   }
 
@@ -45,6 +46,18 @@ export class App extends Component<AppProps, AppState> {
     });
   }
 
+  doSwitchToMainPage = (): void => {
+    this.setState({dashboardContent: 'default'})
+  }
+
+  doSwitchToChatPage = (): void => {
+    this.setState({dashboardContent: 'chat'})
+  }
+
+  doSwitchToCharacterCreation = (): void => {
+    this.setState({dashboardContent: 'characterCreation'})
+  }
+
   doSwitchToLogin = () => {
     this.setState({ authView: 'login' });
   };
@@ -62,7 +75,7 @@ export class App extends Component<AppProps, AppState> {
   };
 
   doSwitchToCreateCharacter = () => {
-    this.setState({ dashboardContent: 'createCharacter' });
+    this.setState({ dashboardContent: 'characterCreation' });
   };
 
   renderAuthContent() {
@@ -85,30 +98,21 @@ export class App extends Component<AppProps, AppState> {
   renderDashboardContent() {
     const { user, dashboardContent } = this.state;
 
-    // Currently only have default content, but can expand this switch statement in the future
     switch (dashboardContent) {
-      case 'createCharacter':
-        return <CreateCharacter doResetDashboard={this.doResetDashboard}></CreateCharacter>
-      case 'default':
-      default:
+      case 'chat':
+        return <Chat return={this.doSwitchToMainPage}/>;
+      case 'characterCreation':
+        // Character creation component will be implemented later
         return (
           <div className="dashboard">
-            <h1>Welcome, {user?.email}</h1>
-            <p>Main dashboard content will go here.</p>
-            <button
-              onClick={() => this.doSwitchToCreateCharacter}
-              className="create-character-button"
-            >
-              Create Character
-            </button>
-            <button
-              onClick={() => getAuth().signOut()}
-              className="logout-button"
-            >
-              Sign Out
-            </button>
+            <h1>Character Creation</h1>
+            <p>Character creation interface will go here.</p>
+            <button onClick={this.doSwitchToMainPage}>Back to Home</button>
           </div>
         );
+      case 'default':
+      default:
+        return <Home />;
     }
   }
 
@@ -125,7 +129,10 @@ export class App extends Component<AppProps, AppState> {
 
     return (
       <div className="dashboard-container">
-        <Sidebar doResetDashboard={this.doResetDashboard} />
+        <div className='sidebar'>
+          <Sidebar doResetDashboard={this.doResetDashboard} />
+        </div>
+
         <div className="main-content">
           {this.renderDashboardContent()}
         </div>
