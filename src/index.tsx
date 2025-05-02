@@ -11,7 +11,8 @@ import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import App from './App'; // Fix: there is app and App
+import { BrowserRouter } from 'react-router-dom';
+import { App } from './App'; // Fix: there is app and App
 import './index.css';
 
 // Your web app's Firebase configuration
@@ -58,6 +59,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );

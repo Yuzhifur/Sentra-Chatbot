@@ -1,0 +1,88 @@
+.user-profile-page {
+  display: flex;
+  height: 100vh;
+}
+
+.user-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2.5rem;
+  background-color: #f7fafc;
+  overflow-y: auto;
+}
+
+.user-avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: linear-gradient(to right, #ec4899, #db2777);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.875rem;
+  font-weight: bold;
+}
+
+.user-username {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.user-stats {
+  margin-top: 0.5rem;
+  color: #718096;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.user-settings-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.user-settings-button {
+  padding: 0.5rem 1rem;
+  background-color: #d1d5db;
+  border: none;
+  border-radius: 9999px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-settings-button:hover {
+  background-color: #9ca3af;
+}
+
+.user-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  color: #374151;
+}
+
+.user-tab {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding-bottom: 0.25rem;
+}
+
+.user-tab.active {
+  font-weight: bold;
+  border-bottom: 2px solid #374151;
+}
+
+.user-empty-state {
+  margin-top: 2.5rem;
+  color: #6b7280;
+  text-align: center;
+}
