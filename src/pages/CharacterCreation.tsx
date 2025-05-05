@@ -1,18 +1,25 @@
-import React, { Component, MouseEvent, useState } from 'react';
-import Sidebar from '../components/Sidebar';
+import React, { Component , MouseEvent} from 'react';
+import { useNavigate } from 'react-router-dom';
 import './CharacterCreation.css';
+import Sidebar from '../components/Sidebar';
 
-type CharacterCreationprops = {
-    // Return to the main page
-    return: () => void;
+// We'll create a functional wrapper component that provides navigate
+const CharacterCreationWrapper: React.FC = () => {
+  const navigate = useNavigate();
+  return <CharacterCreation return={() => navigate('/')} />;
+};
+
+type CharacterCreationProps = {
+  // Return to the main page
+  return: () => void;
 }
 
 type CharacterCreationState = {
     openSection: string | null;
 }
 
-export class CharacterCreation extends Component<CharacterCreationprops, CharacterCreationState> {
-    constructor(props: CharacterCreationprops) {
+export class CharacterCreation extends Component<CharacterCreationProps, CharacterCreationState> {
+    constructor(props: CharacterCreationProps) {
         super(props);
         this.state = {
             openSection: null,
@@ -145,3 +152,5 @@ export class CharacterCreation extends Component<CharacterCreationprops, Charact
         //
     }
 }
+
+export default CharacterCreationWrapper;

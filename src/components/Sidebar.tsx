@@ -1,12 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 type SidebarProps = {
-  doResetDashboard: () => void; // Function to reset dashboard to default content
+  doResetDashboard: () => void;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
   const currentYear = new Date().getFullYear();
+  const navigate = useNavigate(); // For page navigation
 
   return (
     <div className="sidebar">
@@ -14,10 +16,20 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
         <div className="sidebar-header">
           <h1
             className="sidebar-title"
-            onClick={doResetDashboard}
+            onClick={() => navigate('/')}
           >
             Sentra
           </h1>
+          <span
+            className="chat-item"
+            onClick={() => navigate('/chat')}
+            title="Create new Chat"
+            style={{
+              cursor: 'pointer',
+              fontSize: '20px',
+              marginLeft: '10px'
+            }}
+            >✏️</span>
         </div>
 
         <div className="search-container">
@@ -28,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
           />
           <span className="search-icon">🔍</span>
         </div>
+
 
         <div className="chat-history">
           <div className="history-section">

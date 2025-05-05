@@ -4,12 +4,12 @@ import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
 import { Chat } from './pages/Chat';
-import  Home from './pages/Home';
+import Home from './pages/Home';
 import Sidebar from './components/Sidebar';
-import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import UserProfile from './pages/UserProfile';
+import CharacterCreationWrapper from './pages/CharacterCreation';
 import './App.css';
-import { CharacterCreation } from './pages/CharacterCreation';
 
 type AppProps = {};
 
@@ -17,7 +17,6 @@ type AppState = {
   user: User | null;
   loading: boolean;
   authView: 'login' | 'createAccount' | 'resetPassword';
-  dashboardContent: 'default' | 'chat' | 'character-creation'; // Added new content type
 };
 
 export class App extends Component<AppProps, AppState> {
@@ -28,7 +27,6 @@ export class App extends Component<AppProps, AppState> {
       user: null,
       loading: true,
       authView: 'login',
-      dashboardContent: 'default',
     };
   }
 
@@ -49,18 +47,6 @@ export class App extends Component<AppProps, AppState> {
     });
   }
 
-  doSwitchToMainPage = (): void => {
-    this.setState({dashboardContent: 'default'})
-  }
-
-  doSwitchToChatPage = (): void => {
-    this.setState({dashboardContent: 'chat'})
-  }
-
-  doSwitchToCharacterCreation = (): void => {
-    this.setState({dashboardContent: 'character-creation'})
-  }
-
   doSwitchToLogin = () => {
     this.setState({ authView: 'login' });
   };
@@ -73,9 +59,8 @@ export class App extends Component<AppProps, AppState> {
     this.setState({ authView: 'resetPassword' });
   };
 
-  doResetDashboard = () => {
-    this.setState({ dashboardContent: 'default' });
-  };
+  // Keeping this method for compatibility
+  doResetDashboard = () => {};
 
   renderAuthContent() {
     const { authView } = this.state;
@@ -94,21 +79,6 @@ export class App extends Component<AppProps, AppState> {
     }
   }
 
-  renderDashboardContent() {
-    const { user,  dashboardContent } = this.state;
-
-    return (
-      <div>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
-        <Route path="/character-creation" element={<CharacterCreation return={this.doSwitchToMainPage} />} />
-      </Routes>
-      </div>
-    );
-  }
-
   renderContent() {
     const { user, loading } = this.state;
 
@@ -120,23 +90,20 @@ export class App extends Component<AppProps, AppState> {
       return this.renderAuthContent();
     }
 
+    // User is logged in, show the main app with the router
     return (
       <div className="dashboard-container">
         <div className='sidebar'>
           <Sidebar doResetDashboard={this.doResetDashboard} />
         </div>
         <div className="main-content">
-        <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
-        <Route path="/character-creation" element={<CharacterCreation return={this.doSwitchToMainPage} />} />
-      </Routes>
-
-        {/* <div className="main-view">
-          {this.renderDashboardContent()}
-        </div> */}
-      </div>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/chat" element={<Chat return={() => {}} />} />
+            <Route path="/character-creation" element={<CharacterCreationWrapper />} />
+          </Routes>
+        </div>
       </div>
     );
   }

@@ -58,6 +58,12 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
+.chat-item {
+  opacity: 0.8;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
 .chat-history {
   margin-top: 20px;
 }

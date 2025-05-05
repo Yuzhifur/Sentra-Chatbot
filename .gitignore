@@ -71,3 +71,5 @@ node_modules/
 .env.local
 
 public/
+
+.idea/
