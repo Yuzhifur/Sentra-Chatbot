@@ -96,7 +96,7 @@ sentra/
 - When making changes, switch to your branch and pull
 ```bash
    git checkout <yourname>
-   git pull origin main
+   git pull --rebase origin main
 ```
 
 - When commit
