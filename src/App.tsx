@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { FirebaseService } from './services/FirebaseService';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
@@ -39,7 +40,16 @@ export class App extends Component<AppProps, AppState> {
     if (loadEl) loadEl.style.display = 'none';
 
     const auth = getAuth();
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Update last login timestamp when user is already authenticated
+        try {
+          await FirebaseService.updateUserLastLogin(user.uid);
+        } catch (error) {
+          console.error("Error updating last login on app mount:", error);
+        }
+      }
+
       this.setState({
         user,
         loading: false
@@ -57,6 +67,15 @@ export class App extends Component<AppProps, AppState> {
 
   doSwitchToResetPassword = () => {
     this.setState({ authView: 'resetPassword' });
+  };
+
+  doLogout = async () => {
+    try {
+      await FirebaseService.logOut();
+      // Auth state change will handle redirect
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   // Keeping this method for compatibility
@@ -116,5 +135,3 @@ export class App extends Component<AppProps, AppState> {
     );
   }
 }
-
-export default App;

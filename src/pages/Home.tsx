@@ -1,19 +1,35 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Home.css';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
-import UserProfile from './UserProfile';
-
-
-type HomeProps = {
-  // Add any props as needed in the future
-};
-
-type HomeState = {
-  // Add any state needed in the future
-};
+import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+import { FirebaseService } from '../services/FirebaseService';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
+
+        if (currentUser) {
+          const userData = await FirebaseService.getUserData(currentUser.uid);
+          if (userData) {
+            setUsername(userData.username);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <div className="main-content">
@@ -28,9 +44,16 @@ const Home: React.FC = () => {
           <span className="search-icon">🔍</span>
         </div>
         <div className="user-profile" onClick={() => navigate('/profile')}>
-          U
+          {username ? username.charAt(0).toUpperCase() : 'U'}
         </div>
       </div>
+
+      {/* Welcome Message */}
+      {!loading && (
+        <div className="welcome-message">
+          Welcome, <span className="username-highlight">{username || 'User'}</span>!
+        </div>
+      )}
 
       {/* Featured Characters Section */}
       <h2 className="section-title">Featured</h2>
@@ -84,6 +107,5 @@ const Home: React.FC = () => {
     </div>
   );
 }
-
 
 export default Home;

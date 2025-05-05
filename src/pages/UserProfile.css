@@ -14,6 +14,12 @@
   overflow-y: auto;
 }
 
+.loading-spinner {
+  margin-top: 5rem;
+  font-size: 1.2rem;
+  color: #718096;
+}
+
 .user-avatar {
   width: 6rem;
   height: 6rem;
@@ -59,6 +65,21 @@
 
 .user-settings-button:hover {
   background-color: #9ca3af;
+}
+
+.user-logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #f87171;
+  border: none;
+  border-radius: 9999px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.user-logout-button:hover {
+  background-color: #ef4444;
 }
 
 .user-tabs {
