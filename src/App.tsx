@@ -130,16 +130,7 @@ export class App extends Component<AppProps, AppState> {
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
-        <Route
-          path="/character-creation"
-          element={
-            <div className="dashboard">
-              <h1>Character Creation</h1>
-              <p>Character creation interface will go here.</p>
-              <button onClick={this.doSwitchToMainPage}>Back to Home</button>
-            </div>
-          }
-        />
+        <Route path="/character-creation" element={<CharacterCreation return={this.doSwitchToMainPage} />} />
       </Routes>
 
         {/* <div className="main-view">
