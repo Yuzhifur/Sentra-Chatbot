@@ -6,7 +6,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import { Chat } from './pages/Chat';
 import  Home from './pages/Home';
 import Sidebar from './components/Sidebar';
-import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import { Routes, Route, BrowserRouter, useNavigate } from 'react-router-dom';
 import UserProfile from './pages/UserProfile';
 import './App.css';
 import { CharacterCreation } from './pages/CharacterCreation';
@@ -77,6 +77,8 @@ export class App extends Component<AppProps, AppState> {
     this.setState({ dashboardContent: 'default' });
   };
 
+
+
   renderAuthContent() {
     const { authView } = this.state;
 
@@ -95,6 +97,10 @@ export class App extends Component<AppProps, AppState> {
   }
 
   renderDashboardContent() {
+    function ChatWrapper() {
+      const navigate = useNavigate();
+      return <Chat return={() => navigate("/")}/>
+    }
     const { user,  dashboardContent } = this.state;
 
     return (
@@ -102,7 +108,7 @@ export class App extends Component<AppProps, AppState> {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<UserProfile />} />
-        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
+        <Route path="/chat" element={<ChatWrapper />} />
         <Route path="/character-creation" element={<CharacterCreation return={this.doSwitchToMainPage} />} />
       </Routes>
       </div>
@@ -111,7 +117,10 @@ export class App extends Component<AppProps, AppState> {
 
   renderContent() {
     const { user, loading } = this.state;
-
+    function ChatWrapper() {
+      const navigate = useNavigate();
+      return <Chat return={() => navigate("/")}/>
+    }
     if (loading) {
       return <div className="loading">Loading...</div>;
     }
@@ -129,7 +138,7 @@ export class App extends Component<AppProps, AppState> {
         <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<UserProfile />} />
-        <Route path="/chat" element={<Chat return={this.doSwitchToMainPage} />} />
+        <Route path="/chat" element={<ChatWrapper />} />
         <Route
           path="/character-creation"
           element={
