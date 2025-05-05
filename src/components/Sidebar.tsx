@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 type SidebarProps = {
-  doResetDashboard: () => void; // Function to reset dashboard to default content
+  doResetDashboard: () => void;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
@@ -16,13 +16,13 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
         <div className="sidebar-header">
           <h1
             className="sidebar-title"
-            onClick={doResetDashboard}
+            onClick={() => navigate('/')}
           >
             Sentra
           </h1>
           <span
             className="chat-item"
-            onClick={() => navigate('./chat')}
+            onClick={() => navigate('/chat')}
             title="Create new Chat"
             style={{
               cursor: 'pointer',

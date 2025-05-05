@@ -1,9 +1,15 @@
 import React, { Component, FormEvent, ChangeEvent, MouseEvent } from 'react';
 import { getFirestore, arrayUnion, setDoc, updateDoc, collection, addDoc, serverTimestamp, getDoc, query, orderBy, doc} from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import JSON = Mocha.reporters.JSON;
+import { useNavigate } from 'react-router-dom';
 
-type Chatprops = {
+// Create a wrapper component to use React Router hooks
+const ChatWrapper: React.FC = () => {
+  const navigate = useNavigate();
+  return <Chat return={() => navigate('/')} />;
+};
+
+type ChatProps = {
     // Return to the main page
     return: () => void;
 }
@@ -15,9 +21,9 @@ type ChatState = {
     error: string | null;
 }
 
-export class Chat extends Component<Chatprops, ChatState> {
+export class Chat extends Component<ChatProps, ChatState> {
     private sessionId: string = "default-session";
-    constructor(props: Chatprops) {
+    constructor(props: ChatProps) {
         super(props);
         this.state = {
             messages: [],
@@ -34,9 +40,9 @@ export class Chat extends Component<Chatprops, ChatState> {
     render = (): JSX.Element => {
         const { messages, input, isLoading, error } = this.state;
 
-        return <div style={{maxWidth: "800px", margin: "0 atuto", padding: "1rem", marginLeft: "250px"}}>
+        return <div style={{maxWidth: "800px", margin: "0 auto", padding: "1rem", marginLeft: "250px"}}>
             <h1>Welcome to Chat Interface</h1>
-            <button onClick={this.doReturnClick}>Home</button>
+            <button onClick={this.props.return}>Home</button>
 
             {/* Error message */}
             {error && (
@@ -82,7 +88,7 @@ export class Chat extends Component<Chatprops, ChatState> {
                 )}
             </div>
 
-            {/*Input Box and Sumbit Button*/}
+            {/*Input Box and Submit Button*/}
             <form onSubmit={this.handleSubmit} style={{marginTop: "1rem", display: "flex"}}>
                 <input
                     type="text"
@@ -100,11 +106,6 @@ export class Chat extends Component<Chatprops, ChatState> {
                 </button>
             </form>
         </div>
-    }
-
-
-    doReturnClick = (_evt: MouseEvent<HTMLButtonElement>): void => {
-            this.props.return();
     }
 
     handleInputChange = (evt: ChangeEvent<HTMLInputElement>): void => {
@@ -160,11 +161,6 @@ export class Chat extends Component<Chatprops, ChatState> {
                 updatedAt: serverTimestamp()
             });
         }
-        // await addDoc(chatsRef, {
-        //     role: "user",
-        //     content: content,
-        //     timestamp: serverTimestamp(),
-        // })
     }
 
     callDeepSeekAPI = async () => {
@@ -233,4 +229,4 @@ export class Chat extends Component<Chatprops, ChatState> {
     }
 }
 
-
+export default ChatWrapper;
