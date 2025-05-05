@@ -1,5 +1,5 @@
 import React, { Component, FormEvent, ChangeEvent } from 'react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseService } from '../services/FirebaseService';
 import './Auth.css';
 
 type CreateAccountProps = {
@@ -10,8 +10,10 @@ type CreateAccountState = {
   email: string;
   password: string;
   confirmPassword: string;
+  username: string;
   error: string | null;
   loading: boolean;
+  checkingUsername: boolean;
 };
 
 export class CreateAccount extends Component<CreateAccountProps, CreateAccountState> {
@@ -22,8 +24,10 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
       email: '',
       password: '',
       confirmPassword: '',
+      username: '',
       error: null,
-      loading: false
+      loading: false,
+      checkingUsername: false
     };
   }
 
@@ -39,11 +43,31 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
     this.setState({ confirmPassword: e.target.value });
   };
 
+  doUsernameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    this.setState({ username: e.target.value });
+  };
+
+  // Check if username is already taken
+  checkUsernameUnique = async (username: string): Promise<boolean> => {
+    if (!username) return false;
+
+    try {
+      this.setState({ checkingUsername: true });
+      return await FirebaseService.isUsernameAvailable(username);
+    } catch (error) {
+      console.error("Error checking username:", error);
+      return false;
+    } finally {
+      this.setState({ checkingUsername: false });
+    }
+  };
+
   doSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    const { email, password, confirmPassword } = this.state;
+    const { email, password, confirmPassword, username } = this.state;
 
-    if (!email || !password || !confirmPassword) {
+    // Basic validation
+    if (!email || !password || !confirmPassword || !username) {
       this.setState({ error: 'Please fill in all fields' });
       return;
     }
@@ -58,11 +82,35 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
       return;
     }
 
+    if (username.length < 3) {
+      this.setState({ error: 'Username must be at least 3 characters' });
+      return;
+    }
+
+    // Check if username is already taken
+    const isUsernameUnique = await this.checkUsernameUnique(username);
+    if (!isUsernameUnique) {
+      this.setState({ error: 'Username is already taken' });
+      return;
+    }
+
     try {
       this.setState({ loading: true, error: null });
-      const auth = getAuth();
-      await createUserWithEmailAndPassword(auth, email, password);
-      // After successful account creation, auth state change will handle redirect
+
+      // Create Firebase Authentication account
+      const user = await FirebaseService.createAccount(email, password);
+
+      // Create user document in Firestore
+      await FirebaseService.createUserDocument(user.uid, {
+        username,
+        displayName: username,
+        email,
+        userAvatar: "",
+        userDescription: "",
+        userCharacters: [],
+      });
+
+      // Auth state change will handle redirect
     } catch (error: any) {
       console.error('Account creation error:', error);
       let errorMessage = 'Failed to create account';
@@ -81,7 +129,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
   };
 
   render() {
-    const { email, password, confirmPassword, error, loading } = this.state;
+    const { email, password, confirmPassword, username, error, loading, checkingUsername } = this.state;
     const { doSwitchToLogin } = this.props;
 
     return (
@@ -94,6 +142,18 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
             {error && <div className="login-error">{error}</div>}
 
             <div className="login-field">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={this.doUsernameChange}
+                disabled={loading || checkingUsername}
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="login-field">
               <label htmlFor="email">Email</label>
               <input
                 type="email"
@@ -101,6 +161,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
                 value={email}
                 onChange={this.doEmailChange}
                 disabled={loading}
+                autoComplete="email"
               />
             </div>
 
@@ -112,6 +173,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
                 value={password}
                 onChange={this.doPasswordChange}
                 disabled={loading}
+                autoComplete="new-password"
               />
             </div>
 
@@ -123,13 +185,14 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
                 value={confirmPassword}
                 onChange={this.doConfirmPasswordChange}
                 disabled={loading}
+                autoComplete="new-password"
               />
             </div>
 
             <button
               type="submit"
               className="login-button"
-              disabled={loading}
+              disabled={loading || checkingUsername}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>

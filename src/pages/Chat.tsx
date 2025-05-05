@@ -2,7 +2,6 @@ import React, { Component, FormEvent, ChangeEvent, MouseEvent } from 'react';
 import { getFirestore, arrayUnion, setDoc, updateDoc, collection, addDoc, serverTimestamp, getDoc, query, orderBy, doc} from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useNavigate } from 'react-router-dom';
-
 // Create a wrapper component to use React Router hooks
 const ChatWrapper: React.FC = () => {
   const navigate = useNavigate();
