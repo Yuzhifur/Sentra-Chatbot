@@ -3,10 +3,10 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
-import { Chat } from './pages/Chat';
+import ChatWrapper from './pages/Chat';
 import Home from './pages/Home';
 import Sidebar from './components/Sidebar';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import UserProfile from './pages/UserProfile';
 import CharacterCreationWrapper from './pages/CharacterCreation';
 import './App.css';
@@ -90,7 +90,6 @@ export class App extends Component<AppProps, AppState> {
       return this.renderAuthContent();
     }
 
-    // User is logged in, show the main app with the router
     return (
       <div className="dashboard-container">
         <div className='sidebar'>
@@ -100,7 +99,7 @@ export class App extends Component<AppProps, AppState> {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/chat" element={<Chat return={() => {}} />} />
+            <Route path="/chat" element={<ChatWrapper />} />
             <Route path="/character-creation" element={<CharacterCreationWrapper />} />
           </Routes>
         </div>
