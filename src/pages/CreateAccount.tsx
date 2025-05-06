@@ -100,7 +100,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
       // Create Firebase Authentication account
       const user = await FirebaseService.createAccount(email, password);
 
-      // Create user document in Firestore
+      // Create user document in Firestore with chatHistory subcollection
       await FirebaseService.createUserDocument(user.uid, {
         username,
         displayName: username,

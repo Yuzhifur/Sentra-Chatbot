@@ -12,10 +12,12 @@ import {
   updateDoc,
   getDoc,
   collection,
+  addDoc,
   query,
   where,
   getDocs,
-  serverTimestamp
+  serverTimestamp,
+  CollectionReference
 } from 'firebase/firestore';
 
 export interface UserData {
@@ -61,10 +63,20 @@ export class FirebaseService {
 
   static async createUserDocument(userId: string, userData: Partial<UserData>): Promise<void> {
     const db = getFirestore();
+
+    // Create the main user document
     await setDoc(doc(db, "users", userId), {
       ...userData,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp()
+    });
+
+    // Initialize the chatHistory subcollection with a welcome document
+    const chatHistoryRef = collection(db, "users", userId, "chatHistory");
+    await addDoc(chatHistoryRef, {
+      title: "Welcome to Sentra!",
+      createdAt: serverTimestamp(),
+      lastMessageAt: serverTimestamp()
     });
   }
 
@@ -85,5 +97,11 @@ export class FirebaseService {
     }
 
     return null;
+  }
+
+  // Chat History Management
+  static getChatHistoryRef(userId: string): CollectionReference {
+    const db = getFirestore();
+    return collection(db, "users", userId, "chatHistory");
   }
 }
