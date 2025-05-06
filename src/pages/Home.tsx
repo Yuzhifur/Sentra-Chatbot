@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import './Home.css';
-import { useNavigate } from 'react-router-dom';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
+import UserProfile from './UserProfile';
 import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+
+type HomeProps = {
+  // Add any props as needed in the future
+};
+
+type HomeState = {
+  // Add any state needed in the future
+};
 
 const Home: React.FC = () => {
+  // Get Firestore and Storage instances
+  const db = getFirestore();
+  const storage = getStorage();
+
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,6 +44,25 @@ const Home: React.FC = () => {
     };
 
     fetchUserData();
+  }, []);
+  const characterCollectionRef = collection(db, "characters");
+  const [characterList, setCharacterList] = useState([]);
+
+  // fetch the character data from Firestore
+  useEffect(() => {
+    const getCharacterList = async () => {
+      try {
+        const data = await getDocs(characterCollectionRef);
+        const filteredData = data.docs.map((doc) => ({
+          ...doc.data(),
+        }));
+        setCharacterList(filteredData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    getCharacterList();
   }, []);
 
   return (
@@ -59,27 +93,34 @@ const Home: React.FC = () => {
       <h2 className="section-title">Featured</h2>
       <div className="featured-container">
         {/* This would be populated dynamically from database */}
-        <div className="character-card">
+        {/* template for the display of each character */}
+        {/* <div className="character-card">
           <div className="character-image"></div>
           <div className="character-info">
             <h3 className="character-name">Character 1</h3>
             <p className="character-author">by &lt;author&gt;</p>
           </div>
-        </div>
-        <div className="character-card">
-          <div className="character-image"></div>
-          <div className="character-info">
-            <h3 className="character-name">Character 2</h3>
-            <p className="character-author">by &lt;author&gt;</p>
-          </div>
-        </div>
-        <div className="character-card">
-          <div className="character-image"></div>
-          <div className="character-info">
-            <h3 className="character-name">Character 3</h3>
-            <p className="character-author">by &lt;author&gt;</p>
-          </div>
-        </div>
+        </div> */}
+        {characterList.length > 0 ? (
+          characterList.map((char) => (
+            <div key={char.id} className="character-card">
+              <div
+                className="character-image"
+                style={{
+                  backgroundImage: `url(${char.imageUrl || "/placeholder.png"})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              ></div>
+              <div className="character-info">
+                <h3 className="character-name">{char.name}</h3>
+                <p className="character-author">by {char.author || "Unknown"}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No character available yet.</p>
+        )}
       </div>
 
       {/* Character Creation Section */}
