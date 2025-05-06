@@ -46,7 +46,8 @@ const Home: React.FC = () => {
     fetchUserData();
   }, []);
   const characterCollectionRef = collection(db, "characters");
-  const [characterList, setCharacterList] = useState([]);
+  const [characterList, setCharacterList] = useState([]);  // for showing characters 
+  const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);  // for popup
 
   // fetch the character data from Firestore
   useEffect(() => {
@@ -92,18 +93,13 @@ const Home: React.FC = () => {
       {/* Featured Characters Section */}
       <h2 className="section-title">Featured</h2>
       <div className="featured-container">
-        {/* This would be populated dynamically from database */}
-        {/* template for the display of each character */}
-        {/* <div className="character-card">
-          <div className="character-image"></div>
-          <div className="character-info">
-            <h3 className="character-name">Character 1</h3>
-            <p className="character-author">by &lt;author&gt;</p>
-          </div>
-        </div> */}
+        {/* Populate character info from firestore database */}
         {characterList.length > 0 ? (
           characterList.map((char) => (
-            <div key={char.id} className="character-card">
+            <div key={char.id}
+            className="character-card"
+            onClick={() => setSelectedCharacter(char)}
+            >
               <div
                 className="character-image"
                 style={{
@@ -114,7 +110,7 @@ const Home: React.FC = () => {
               ></div>
               <div className="character-info">
                 <h3 className="character-name">{char.name}</h3>
-                <p className="character-author">by {char.author || "Unknown"}</p>
+                <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
               </div>
             </div>
           ))
@@ -145,6 +141,34 @@ const Home: React.FC = () => {
         <a href="#">Policies</a>
         <a href="#">Blog</a>
       </div>
+      
+      {/* Popup */}
+      {selectedCharacter && (
+        <div className="modal-overlay" onClick={() => setSelectedCharacter(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedCharacter(null)}>×</button>
+            <h1>{selectedCharacter.name}</h1>
+            <br />
+            <p><strong>Author:</strong> {selectedCharacter.authorDisplayName || "Unknown"}</p>
+            <br />
+            <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
+            <br />
+            {selectedCharacter.imageUrl && (
+              <img src={selectedCharacter.imageUrl} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
+            )}
+            <span
+            className="chat-item"
+            onClick={() => navigate('/chat')}
+            title="Create new Chat"
+            style={{
+              cursor: 'pointer',
+              fontSize: '15px',
+              marginLeft: '10px'
+            }}
+            >Let's Chat! ✏️</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
