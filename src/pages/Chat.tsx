@@ -1,54 +1,50 @@
-import React, { Component, FormEvent, ChangeEvent, createRef } from 'react';
-import { getFirestore, arrayUnion, setDoc, updateDoc, doc, getDoc, Timestamp } from "firebase/firestore";
+import React, { Component, FormEvent, ChangeEvent, MouseEvent } from 'react';
+import { getFirestore, setDoc, updateDoc, getDoc, doc } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getAuth } from "firebase/auth";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 import './Chat.css';
 
 // Create a wrapper component to use React Router hooks
 const ChatWrapper: React.FC = () => {
   const navigate = useNavigate();
-  return <Chat return={() => navigate('/')} />;
+  const { characterId, sessionId } = useParams();
+  return (
+    <Chat 
+      return={() => navigate('/')}
+      characterId={characterId || "1"} // Default to character "1" if not provided
+      sessionId={sessionId || "default-session"} // Default session ID
+    />
+  );
 };
 
 type ChatProps = {
-    // Return to the main page
     return: () => void;
-}
+    characterId: string;
+    sessionId: string;
+};
 
-// Message interface - compatible with Claude API format
-interface Message {
-    role: 'user' | 'assistant' | 'system';
+type Message = {
+    role: string;
     content: string;
-    timestamp?: Timestamp;
-}
+};
 
-// Session metadata interface
-interface SessionMetadata {
-    characterId?: string;
-    characterName?: string;
-    lastUpdated: Timestamp;
-    createdAt: Timestamp;
-    userId: string;
-}
-
-// Chat session interface
-interface ChatSession {
+// Format of the history stored in Firestore
+type ChatHistory = {
     messages: Message[];
-    metadata: SessionMetadata;
-}
+};
 
 type ChatState = {
     messages: Message[]; // Conversation history
     input: string; // Current content in the input box
     isLoading: boolean;
     error: string | null;
-    sessionId: string;
-}
+    characterName: string;
+    userName: string;
+};
 
 export class Chat extends Component<ChatProps, ChatState> {
-    private messagesEndRef = createRef<HTMLDivElement>();
-    
     constructor(props: ChatProps) {
         super(props);
         this.state = {
@@ -56,88 +52,78 @@ export class Chat extends Component<ChatProps, ChatState> {
             input: "",
             isLoading: false,
             error: null,
-            sessionId: this.generateSessionId() // Generate a unique session ID
+            characterName: "Loading...",
+            userName: "User"
         };
     }
 
     componentDidMount = async () => {
-        await this.loadSession();
-        this.scrollToBottom();
+        await this.loadCharacterInfo();
+        await this.loadUserInfo();
+        await this.loadChat();
     };
-    
-    componentDidUpdate() {
-        this.scrollToBottom();
-    }
-
-    scrollToBottom = () => {
-        this.messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Generate a unique session ID
-    generateSessionId = (): string => {
-        const timestamp = new Date().getTime();
-        const random = Math.floor(Math.random() * 1000000);
-        return `session_${timestamp}_${random}`;
-    }
 
     render = (): JSX.Element => {
-        const { messages, input, isLoading, error } = this.state;
+        const { messages, input, isLoading, error, characterName } = this.state;
 
         return (
             <div className="chat-container">
-                <div className="chat-header">
-                    <h1>Chat with AI Character</h1>
-                    <button className="home-button" onClick={this.props.return}>Back to Home</button>
-                </div>
-
-                {/* Error message */}
-                {error && (
-                    <div className="error-message">
-                        {error}
+                <Sidebar doResetDashboard={() => {}} />
+                <div className="chat-main">
+                    <div className="chat-header">
+                        <button className="home-button" onClick={this.props.return}>Home</button>
+                        <h1>Chat with {characterName}</h1>
                     </div>
-                )}
 
-                {/* Conversation Box */}
-                <div className="conversation-box">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`message ${msg.role}-message`}>
-                            <div className="message-content">
-                                <p>{msg.content}</p>
-                            </div>
-                        </div>
-                    ))}
+                    {/* Error message */}
+                    {error && <div className="error-message">{error}</div>}
 
-                    {/* Loading indicator */}
-                    {isLoading && (
-                        <div className="loading-indicator">
-                            <div className="typing-indicator">
-                                <span></span>
-                                <span></span>
-                                <span></span>
+                    {/* Conversation Box */}
+                    <div className="conversation-box">
+                        {messages.length === 0 ? (
+                            <div className="empty-chat">
+                                Start a conversation with {characterName} by typing a message below.
                             </div>
-                        </div>
-                    )}
-                    <div ref={this.messagesEndRef} />
+                        ) : (
+                            messages.map((msg, idx) => (
+                                <div key={idx} className={`message ${msg.role === "user" ? "user-message" : "assistant-message"}`}>
+                                    <div className="message-header">
+                                        <b>{msg.role === "user" ? this.state.userName : characterName}</b>
+                                    </div>
+                                    <div className="message-content">
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+
+                        {/* Loading indicator */}
+                        {isLoading && (
+                            <div className="loading-indicator">
+                                {characterName} is typing...
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Input Box and Submit Button */}
+                    <form onSubmit={this.handleSubmit} className="input-form">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={this.handleInputChange}
+                            placeholder={`Send a message to ${characterName}...`}
+                            className="message-input"
+                            disabled={isLoading}
+                        />
+                        <button
+                            type="submit"
+                            disabled={isLoading || input.trim() === ""}
+                            className={`send-button ${isLoading || input.trim() === "" ? "disabled" : ""}`}
+                        >
+                            {isLoading ? 'Sending...' : 'Send'}
+                        </button>
+                    </form>
                 </div>
-
-                {/* Input Box and Submit Button */}
-                <form onSubmit={this.handleSubmit} className="input-form">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={this.handleInputChange}
-                        placeholder="Type your message..."
-                        disabled={isLoading}
-                        className="message-input"
-                    />
-                    <button
-                        type="submit"
-                        disabled={isLoading || !input.trim()}
-                        className="send-button"
-                    >
-                        Send
-                    </button>
-                </form>
             </div>
         );
     }
@@ -153,11 +139,10 @@ export class Chat extends Component<ChatProps, ChatState> {
             return;
         }
 
-        // Create userMessage object
+        // Create user message
         const userMessage: Message = {
-            role: 'user', 
-            content: newMessage,
-            timestamp: Timestamp.now()
+            role: "user",
+            content: newMessage
         };
 
         // Update local state to show user message and clear input box
@@ -169,136 +154,239 @@ export class Chat extends Component<ChatProps, ChatState> {
         }));
 
         try {
-            // Save user's message to Firestore
-            await this.saveMessageToFirestore(userMessage);
+            // Add the user message to the chat history
+            const updatedMessages = [...this.state.messages, userMessage];
+            await this.saveChat(updatedMessages);
 
-            // Call Claude API via Cloud Function
-            await this.callClaudeAPI();
-        } catch (error) {
-            console.error("Error sending message:", error);
-            this.setState({
-                isLoading: false,
-                error: error instanceof Error ? error.message : "Error sending message"
-            });
-        }
-    }
-
-    saveMessageToFirestore = async (message: Message) => {
-        const db = getFirestore();
-        const auth = getAuth();
-        const user = auth.currentUser;
-        
-        if (!user) {
-            throw new Error("User not authenticated");
-        }
-
-        const { sessionId } = this.state;
-        const sessionRef = doc(db, "chatSessions", sessionId);
-
-        try {
-            // Attempt to update existing document
-            const docSnap = await getDoc(sessionRef);
-            
-            if (docSnap.exists()) {
-                // Update existing session
-                await updateDoc(sessionRef, {
-                    messages: arrayUnion(message),
-                    "metadata.lastUpdated": Timestamp.now()
-                });
-            } else {
-                // Create new session
-                const newSession: ChatSession = {
-                    messages: [message],
-                    metadata: {
-                        userId: user.uid,
-                        lastUpdated: Timestamp.now(),
-                        createdAt: Timestamp.now()
-                    }
-                };
-                await setDoc(sessionRef, newSession);
-            }
-        } catch (error) {
-            console.error("Error saving to Firestore:", error);
-            throw error;
-        }
-    }
-
-    callClaudeAPI = async () => {
-        try {
-            const functions = getFunctions();
-            const claudeFunction = httpsCallable(functions, "callClaudeAPI");
-
-            // Call cloud function with all messages to maintain conversation context
-            const result = await claudeFunction({
-                messages: this.state.messages,
-                sessionId: this.state.sessionId
-            });
-
-            // Process API response
-            const data = result.data as { 
-                success: boolean; 
-                assistantMessage?: Message;
-                error?: string;
-            };
-
-            if (data.success && data.assistantMessage) {
-                // Add timestamp to the assistant message
+            // For now, we'll use a simulated response instead of calling the cloud function
+            // This allows us to test the UI without depending on the cloud function
+            setTimeout(() => {
                 const assistantMessage: Message = {
-                    ...data.assistantMessage,
-                    timestamp: Timestamp.now()
+                    role: "assistant",
+                    content: `This is a simulated response. You said: "${newMessage}". In a real implementation, this would be a response from the cloud function connecting to Claude API.`
                 };
-
-                // Update local state
+                
+                // Update state with assistant message
                 this.setState(prevState => ({
                     messages: [...prevState.messages, assistantMessage],
                     isLoading: false
                 }));
+                
+                // Save the updated chat including the assistant's response
+                this.saveChat([...updatedMessages, assistantMessage])
+                    .catch(err => console.error("Error saving assistant message:", err));
+            }, 1000);
 
-                // Save assistant message to Firestore
-                await this.saveMessageToFirestore(assistantMessage);
+            /* 
+            // Commented out for now until cloud function issues are resolved
+            // Call cloud function to process the chat and get AI response
+            const functions = getFunctions();
+            const processChat = httpsCallable(functions, "processChat");
+            
+            console.log("Sending to cloud function:", {
+                messages: updatedMessages,
+                sessionId: this.props.sessionId,
+                characterId: this.props.characterId
+            });
+            
+            const response = await processChat({
+                messages: updatedMessages,
+                sessionId: this.props.sessionId,
+                characterId: this.props.characterId
+            });
+            
+            // Handle response and update state
+            const data = response.data as { success: boolean; aiMessage: Message };
+            
+            if (data.success && data.aiMessage) {
+                const assistantMessage = data.aiMessage;
+                
+                // Update state with assistant message
+                this.setState(prevState => ({
+                    messages: [...prevState.messages, assistantMessage],
+                    isLoading: false
+                }));
+                
+                // Save the updated chat including the assistant's response
+                await this.saveChat([...updatedMessages, assistantMessage]);
             } else {
-                throw new Error(data.error || "Invalid response from Claude API");
+                throw new Error("Failed to get a valid response");
             }
+            */
         } catch (error) {
-            console.error("Error calling Claude API:", error);
+            console.error("Error in chat:", error);
             this.setState({
                 isLoading: false,
-                error: error instanceof Error ? error.message : "Error calling AI service"
+                error: error instanceof Error ? error.message : "An error occurred"
             });
         }
     }
 
-    loadSession = async () => {
-        const db = getFirestore();
-        const { sessionId } = this.state;
-        const sessionRef = doc(db, "chatSessions", sessionId);
-
+    loadCharacterInfo = async () => {
         try {
-            const docSnap = await getDoc(sessionRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data() as ChatSession;
-                this.setState({ messages: data.messages || [] });
-            } else {
-                // If no session exists, initialize with a system message
-                const systemMessage: Message = {
-                    role: 'system',
-                    content: 'I am an AI character ready to have a conversation with you.',
-                    timestamp: Timestamp.now()
-                };
-                
-                this.setState({ 
-                    messages: [systemMessage] 
+            const db = getFirestore();
+            const characterRef = doc(db, "characters", this.props.characterId);
+            const characterDoc = await getDoc(characterRef);
+            
+            if (characterDoc.exists()) {
+                const characterData = characterDoc.data();
+                this.setState({
+                    characterName: characterData.name || "Character"
                 });
-                
-                // Save initial system message
-                await this.saveMessageToFirestore(systemMessage);
+            } else {
+                this.setState({
+                    characterName: "Unknown Character",
+                    error: "Character not found"
+                });
             }
         } catch (error) {
-            console.error("Error loading session:", error);
+            console.error("Error loading character:", error);
             this.setState({
-                error: error instanceof Error ? error.message : "Error loading conversation history"
+                error: error instanceof Error ? error.message : "Error loading character information"
             });
+        }
+    }
+
+    loadUserInfo = async () => {
+        try {
+            const auth = getAuth();
+            const currentUser = auth.currentUser;
+            
+            if (currentUser) {
+                const db = getFirestore();
+                const userRef = doc(db, "users", currentUser.uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    this.setState({
+                        userName: userData.displayName || "User"
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error loading user info:", error);
+            // Don't set an error state here as it's not critical
+        }
+    }
+
+    loadChat = async () => {
+        try {
+            const db = getFirestore();
+            const chatRef = doc(db, "chats", this.props.sessionId);
+            const chatDoc = await getDoc(chatRef);
+            
+            console.log("Loading chat document:", this.props.sessionId);
+            
+            if (chatDoc.exists()) {
+                const chatData = chatDoc.data();
+                console.log("Chat data loaded:", chatData);
+                
+                // Parse the history string to get messages
+                if (chatData.history) {
+                    try {
+                        const history: ChatHistory = JSON.parse(chatData.history);
+                        console.log("Parsed history:", history);
+                        
+                        if (history.messages && Array.isArray(history.messages)) {
+                            this.setState({ messages: history.messages });
+                        } else {
+                            console.error("Invalid messages format in history:", history);
+                        }
+                    } catch (parseError) {
+                        console.error("Error parsing chat history:", parseError);
+                        this.setState({
+                            error: "Error loading chat history"
+                        });
+                    }
+                } else {
+                    console.log("No history field in chat document");
+                }
+            } else {
+                console.log("Chat doesn't exist, creating new chat");
+                // Chat doesn't exist yet, create a new one
+                await this.createNewChat();
+            }
+        } catch (error) {
+            console.error("Error loading chat:", error);
+            this.setState({
+                error: error instanceof Error ? error.message : "Error loading chat"
+            });
+        }
+    }
+
+    createNewChat = async () => {
+        try {
+            const auth = getAuth();
+            const currentUser = auth.currentUser;
+            
+            if (!currentUser) {
+                this.setState({
+                    error: "You must be logged in to chat"
+                });
+                return;
+            }
+            
+            const db = getFirestore();
+            const chatRef = doc(db, "chats", this.props.sessionId);
+            
+            const newChat = {
+                characterId: this.props.characterId,
+                characterName: this.state.characterName,
+                userId: currentUser.uid,
+                userName: this.state.userName,
+                history: JSON.stringify({ messages: [] }),
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            
+            await setDoc(chatRef, newChat);
+            
+            // Reset messages state to empty
+            this.setState({ messages: [] });
+        } catch (error) {
+            console.error("Error creating new chat:", error);
+            this.setState({
+                error: error instanceof Error ? error.message : "Error creating new chat"
+            });
+        }
+    }
+
+    saveChat = async (messages: Message[]) => {
+        try {
+            const db = getFirestore();
+            const chatRef = doc(db, "chats", this.props.sessionId);
+            
+            // Format the history as a JSON string
+            const historyStr = JSON.stringify({ messages });
+            console.log("Saving chat history:", historyStr);
+            
+            // Check if the document exists first
+            const docSnap = await getDoc(chatRef);
+            
+            if (docSnap.exists()) {
+                // Update existing document
+                await updateDoc(chatRef, {
+                    history: historyStr,
+                    updatedAt: new Date()
+                });
+                console.log("Chat history updated successfully");
+            } else {
+                // Create new document
+                await setDoc(chatRef, {
+                    characterId: this.props.characterId,
+                    characterName: this.state.characterName,
+                    userId: getAuth().currentUser?.uid || "unknown-user",
+                    userName: this.state.userName,
+                    history: historyStr,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+                console.log("New chat document created successfully");
+            }
+        } catch (error) {
+            console.error("Error saving chat:", error);
+            throw error;
         }
     }
 }

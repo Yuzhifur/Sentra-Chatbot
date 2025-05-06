@@ -7,20 +7,8 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-// import {onRequest} from "firebase-functions/v2/https";
-// import * as logger from "firebase-functions/logger";
-
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
-
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import axios from "axios";
 
 admin.initializeApp();
 
@@ -29,118 +17,128 @@ interface Message {
     content: string;
 }
 
-interface DeepseekChatResult {
+interface ChatHistory {
+    messages: Message[];
+}
+
+interface ChatResult {
     success: boolean;
     aiMessage: Message;
 }
 
-export const deepseekChat = functions.https.onCall(async (data): Promise<DeepseekChatResult> => {
+export const processChat = functions.https.onCall(async (data): Promise<ChatResult> => {
     try {
-
-        // Carefully check the format of messages
-        if (!data|| typeof data !== 'object') {
+        // Log the incoming data for debugging
+        console.log("Received data in cloud function:", data);
+        
+        // Validate input data
+        if (!data || typeof data !== 'object') {
+            console.error("Invalid data format:", data);
             throw new functions.https.HttpsError(
                 "invalid-argument",
-                "请求数据格式无效"
+                "Invalid request data format"
             );
         }
 
+        // Check for messages array
         if (!('messages' in data)) {
+            console.error("No messages field in data:", data);
             throw new functions.https.HttpsError(
                 "invalid-argument",
-                "没有message在data里面"
+                "No messages in request data"
             );
         }
 
         if (!Array.isArray(data.messages)) {
+            console.error("Messages is not an array:", data.messages);
             throw new functions.https.HttpsError(
                 "invalid-argument",
-                "不是array"
+                "Messages must be an array"
             );
         }
 
-        if (data.messages.length === 0 ) {
+        if (data.messages.length === 0) {
+            console.error("Empty messages array");
             throw new functions.https.HttpsError(
                 "invalid-argument",
-                "message长度为0"
+                "Messages array is empty"
             );
         }
 
-        // if (!('messages' in data) || !Array.isArray(data.messages) || data.messages.length === 0) {
-        //     throw new functions.https.HttpsError(
-        //         "invalid-argument",
-        //         "消息格式无效或未空"
-        //     );
-        // }
-
-        // Obtain the messages
-        const messages = data.messages as Message[];
-
-        // Safely extract sessionId
-        const sessionId = 'sessionId' in data && typeof data.sessionId === 'string' ? data.sessionId : undefined;
-
-
-        //Obtain DeepSeek API key
-        const deepseekApiKey = functions.config().deepseek.apikey;
-
-        if (!deepseekApiKey) {
+        // Check for session ID
+        if (!('sessionId' in data)) {
+            console.error("No sessionId in data:", data);
             throw new functions.https.HttpsError(
-                "failed-precondition",
-                "服务器未正确配置API密钥"
+                "invalid-argument",
+                "Missing sessionId"
             );
         }
 
-        // Call DeepSeek API
-        const response = await axios.post(
-            "https://api.deepseek.com/v1/chat/completions",
-            {
-                model: "deepseek-chat",
-                messages: messages,
-                temperature: 0.7,
-                max_tokens: 800,
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${deepseekApiKey}`
-                }
-            }
-        );
-
-        if (response.status !== 200) {
-            throw new functions.https.HttpsError('internal', 'DeepSeek 服务异常');
+        if (typeof data.sessionId !== 'string') {
+            console.error("sessionId is not a string:", data.sessionId);
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "sessionId must be a string"
+            );
         }
 
-        // Check do we have valid AI response
-        if (!response.data || !response.data.choices || !Array.isArray(response.data.choices) ||
-            response.data.choices.length === 0 || !response.data.choices[0].message ||
-        typeof response.data.choices[0].message.content !== "string") {
+        // Check for character ID
+        if (!('characterId' in data)) {
+            console.error("No characterId in data:", data);
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "Missing characterId"
+            );
+        }
+
+        if (typeof data.characterId !== 'string') {
+            console.error("characterId is not a string:", data.characterId);
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "characterId must be a string"
+            );
+        }
+
+        // Extract data
+        const sessionId = data.sessionId;
+        const characterId = data.characterId;
+
+        // Get character information from Firestore
+        const db = admin.firestore();
+        const characterDoc = await db.collection("characters").doc(characterId).get();
+        
+        if (!characterDoc.exists) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "Character not found"
+            );
+        }
+
+        const characterData = characterDoc.data();
+        
+        if (!characterData) {
             throw new functions.https.HttpsError(
                 "internal",
-                "从DeepSeek API 收到的响应格式无效"
+                "Character data is empty"
             );
         }
 
-        // Get AI's response
+        // Get the chat document
+        const chatDoc = await db.collection("chats").doc(sessionId).get();
+        
+        if (!chatDoc.exists) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "Chat session not found"
+            );
+        }
+
+        // Create a placeholder AI response
+        // In a real implementation, this would be replaced by a call to Claude API
         const aiResponse: Message = {
-            role: response.data.choices[0].message.role,
-            content: response.data.choices[0].message.content
-        }
-
-        // Add AI response to the dialog history in Firestore
-        if (sessionId) {
-            const db = admin.firestore();
-            const sessionRef = db.collection("chats").doc(sessionId);
-
-            try {
-                await sessionRef.update({
-                    messages: admin.firestore.FieldValue.arrayUnion(aiResponse),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (err) {
-                console.error("更新 Firestore 时出错", err);
-            }
-        }
+            role: "assistant",
+            content: `This is a placeholder response from ${characterData.name}. In a real implementation, this would be a response generated by Claude API based on my character profile: ${characterData.characterDescription}`
+        };
 
         // Return AI response to client
         return {
@@ -149,12 +147,113 @@ export const deepseekChat = functions.https.onCall(async (data): Promise<Deepsee
         };
 
     } catch (error) {
-        console.error("DeepSeek 聊天请求出错：", error);
+        console.error("Error processing chat request:", error);
 
-        // Return the error message to client
+        // Return error to client
         throw new functions.https.HttpsError(
             "internal",
-            error instanceof Error ? error.message : "与AI聊天服务时出错"
+            error instanceof Error ? error.message : "Error processing chat request"
         );
     }
-})
+});
+
+// Cloud function to create a new chat session
+export const createChatSession = functions.https.onCall(async (data): Promise<{ success: boolean; sessionId: string }> => {
+    try {
+        // Validate input data
+        if (!data || typeof data !== 'object') {
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "Invalid request data format"
+            );
+        }
+
+        if (!('characterId' in data) || typeof data.characterId !== 'string') {
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "Missing or invalid characterId"
+            );
+        }
+
+        if (!('userId' in data) || typeof data.userId !== 'string') {
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "Missing or invalid userId"
+            );
+        }
+
+        // Extract data
+        const characterId = data.characterId;
+        const userId = data.userId;
+
+        // Get character information
+        const db = admin.firestore();
+        const characterDoc = await db.collection("characters").doc(characterId).get();
+        
+        if (!characterDoc.exists) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "Character not found"
+            );
+        }
+
+        const characterData = characterDoc.data();
+        
+        if (!characterData) {
+            throw new functions.https.HttpsError(
+                "internal",
+                "Character data is empty"
+            );
+        }
+
+        // Get user information
+        const userDoc = await db.collection("users").doc(userId).get();
+        
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "User not found"
+            );
+        }
+
+        const userData = userDoc.data();
+        
+        if (!userData) {
+            throw new functions.https.HttpsError(
+                "internal",
+                "User data is empty"
+            );
+        }
+
+        // Create a new chat session
+        const chatRef = db.collection("chats").doc();
+        
+        // Initialize with empty message history
+        const emptyHistory: ChatHistory = { messages: [] };
+        
+        await chatRef.set({
+            characterId: characterId,
+            characterName: characterData.name,
+            userId: userId,
+            userName: userData.displayName || userData.username || "User",
+            history: JSON.stringify(emptyHistory),
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Return the new session ID
+        return {
+            success: true,
+            sessionId: chatRef.id
+        };
+
+    } catch (error) {
+        console.error("Error creating chat session:", error);
+
+        // Return error to client
+        throw new functions.https.HttpsError(
+            "internal",
+            error instanceof Error ? error.message : "Error creating chat session"
+        );
+    }
+});
