@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './Home.css';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
-import UserProfile from './UserProfile';
+import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-
-type HomeProps = {
-  // Add any props as needed in the future
-};
-
-type HomeState = {
-  // Add any state needed in the future
-};
+import SearchBar from '../components/SearchBar';
 
 const Home: React.FC = () => {
   // Get Firestore and Storage instances
@@ -45,8 +37,9 @@ const Home: React.FC = () => {
 
     fetchUserData();
   }, []);
+
   const characterCollectionRef = collection(db, "characters");
-  const [characterList, setCharacterList] = useState([]);  // for showing characters 
+  const [characterList, setCharacterList] = useState([]);  // for showing characters
   const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);  // for popup
 
   // fetch the character data from Firestore
@@ -70,14 +63,7 @@ const Home: React.FC = () => {
     <div className="main-content">
       {/* Top search bar and user profile */}
       <div className="search-bar-container">
-        <div className="main-search-bar">
-          <input
-            type="text"
-            className="main-search-input"
-            placeholder="Search Here for Characters"
-          />
-          <span className="search-icon">🔍</span>
-        </div>
+        <SearchBar />
         <div className="user-profile" onClick={() => navigate('/profile')}>
           {username ? username.charAt(0).toUpperCase() : 'U'}
         </div>
@@ -141,7 +127,7 @@ const Home: React.FC = () => {
         <a href="#">Policies</a>
         <a href="#">Blog</a>
       </div>
-      
+
       {/* Popup */}
       {selectedCharacter && (
         <div className="modal-overlay" onClick={() => setSelectedCharacter(null)}>

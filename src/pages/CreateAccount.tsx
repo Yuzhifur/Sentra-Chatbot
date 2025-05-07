@@ -53,6 +53,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
 
     try {
       this.setState({ checkingUsername: true });
+      // The service will check case-insensitively
       return await FirebaseService.isUsernameAvailable(username);
     } catch (error) {
       console.error("Error checking username:", error);
@@ -87,7 +88,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
       return;
     }
 
-    // Check if username is already taken
+    // Check if username is already taken (case-insensitive check)
     const isUsernameUnique = await this.checkUsernameUnique(username);
     if (!isUsernameUnique) {
       this.setState({ error: 'Username is already taken' });
@@ -101,9 +102,10 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
       const user = await FirebaseService.createAccount(email, password);
 
       // Create user document in Firestore with chatHistory subcollection
+      // The FirebaseService will store the username in lowercase
       await FirebaseService.createUserDocument(user.uid, {
-        username,
-        displayName: username,
+        username, // Will be converted to lowercase in the service
+        displayName: username, // Keep original case for display
         email,
         userAvatar: "",
         userDescription: "",

@@ -54,8 +54,11 @@ export class FirebaseService {
   static async isUsernameAvailable(username: string): Promise<boolean> {
     if (!username || username.trim() === '') return false;
 
+    // Store the lowercase version to search case-insensitively
+    const lowerUsername = username.toLowerCase();
+
     const db = getFirestore();
-    const q = query(collection(db, "users"), where("username", "==", username));
+    const q = query(collection(db, "users"), where("username", "==", lowerUsername));
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.empty;
@@ -63,6 +66,11 @@ export class FirebaseService {
 
   static async createUserDocument(userId: string, userData: Partial<UserData>): Promise<void> {
     const db = getFirestore();
+
+    // Ensure username is stored in lowercase for case-insensitive search
+    if (userData.username) {
+      userData.username = userData.username.toLowerCase();
+    }
 
     // Create the main user document
     await setDoc(doc(db, "users", userId), {
@@ -103,5 +111,31 @@ export class FirebaseService {
   static getChatHistoryRef(userId: string): CollectionReference {
     const db = getFirestore();
     return collection(db, "users", userId, "chatHistory");
+  }
+
+  // Character Creation Helper
+  static async getNextCharacterId(): Promise<number> {
+    const db = getFirestore();
+    const statsDocRef = doc(db, "global", "stats");
+    const statsDoc = await getDoc(statsDocRef);
+
+    let currentCount = 1;
+
+    if (statsDoc.exists()) {
+      const data = statsDoc.data();
+      currentCount = (data.characterCount || 0) + 1;
+
+      // Update the counter
+      await updateDoc(statsDocRef, {
+        characterCount: currentCount
+      });
+    } else {
+      // Create the document if it doesn't exist
+      await setDoc(statsDocRef, {
+        characterCount: currentCount
+      });
+    }
+
+    return currentCount;
   }
 }
