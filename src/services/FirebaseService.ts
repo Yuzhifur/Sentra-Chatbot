@@ -17,7 +17,8 @@ import {
   where,
   getDocs,
   serverTimestamp,
-  CollectionReference
+  CollectionReference,
+  Timestamp
 } from 'firebase/firestore';
 
 export interface UserData {
@@ -113,29 +114,93 @@ export class FirebaseService {
     return collection(db, "users", userId, "chatHistory");
   }
 
-  // Character Creation Helper
+  // Character ID Generation
   static async getNextCharacterId(): Promise<number> {
     const db = getFirestore();
     const statsDocRef = doc(db, "global", "stats");
-    const statsDoc = await getDoc(statsDocRef);
-
-    let currentCount = 1;
-
-    if (statsDoc.exists()) {
-      const data = statsDoc.data();
-      currentCount = (data.characterCount || 0) + 1;
-
-      // Update the counter
-      await updateDoc(statsDocRef, {
-        characterCount: currentCount
-      });
-    } else {
-      // Create the document if it doesn't exist
-      await setDoc(statsDocRef, {
-        characterCount: currentCount
-      });
+    
+    try {
+      // Use transaction to ensure ID uniqueness
+      const statsDoc = await getDoc(statsDocRef);
+      
+      let currentCount = 1;
+      
+      if (statsDoc.exists()) {
+        const data = statsDoc.data();
+        currentCount = (data.characterCount || 0) + 1;
+        
+        // Update the counter
+        await updateDoc(statsDocRef, {
+          characterCount: currentCount
+        });
+      } else {
+        // Create the document if it doesn't exist
+        await setDoc(statsDocRef, {
+          characterCount: currentCount
+        });
+      }
+      
+      return currentCount;
+    } catch (error) {
+      console.error("Error getting next character ID:", error);
+      throw new Error("Failed to generate character ID");
     }
+  }
 
-    return currentCount;
+  // User Character List Management
+  static async addCharacterToUserList(userId: string, characterId: string): Promise<void> {
+    const db = getFirestore();
+    const userRef = doc(db, "users", userId);
+    
+    // Get current user data
+    const userSnapshot = await getDoc(userRef);
+    
+    if (userSnapshot.exists()) {
+      const userData = userSnapshot.data();
+      let userCharacters = userData.userCharacters || [];
+      
+      // Only add if not already in the array
+      if (!userCharacters.includes(characterId)) {
+        userCharacters.push(characterId);
+        
+        // Update the user document
+        await updateDoc(userRef, {
+          userCharacters: userCharacters
+        });
+      }
+    } else {
+      throw new Error("User document not found");
+    }
+  }
+
+  // Get user's characters
+  static async getUserCharacters(userId: string): Promise<any[]> {
+    try {
+      const userData = await this.getUserData(userId);
+      
+      if (!userData || !userData.userCharacters || userData.userCharacters.length === 0) {
+        return [];
+      }
+      
+      const db = getFirestore();
+      const characters = [];
+      
+      // Fetch each character document
+      for (const characterId of userData.userCharacters) {
+        const characterDoc = await getDoc(doc(db, "characters", characterId));
+        
+        if (characterDoc.exists()) {
+          characters.push({
+            id: characterId,
+            ...characterDoc.data()
+          });
+        }
+      }
+      
+      return characters;
+    } catch (error) {
+      console.error("Error fetching user characters:", error);
+      throw error;
+    }
   }
 }
