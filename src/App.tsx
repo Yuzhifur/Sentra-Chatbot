@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { FirebaseService } from './services/FirebaseService';
+import { initializeDefaultCharacter } from './services/InitDefaultCharacter';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
 import { ResetPassword } from './pages/ResetPassword';
@@ -38,6 +39,17 @@ export class App extends Component<AppProps, AppState> {
 
     if (messageEl) messageEl.style.display = 'none';
     if (loadEl) loadEl.style.display = 'none';
+
+    // Initialize the default character
+    initializeDefaultCharacter()
+      .then(created => {
+        if (created) {
+          console.log("Default character initialized for first-time use");
+        }
+      })
+      .catch(error => {
+        console.error("Error initializing default character:", error);
+      });
 
     const auth = getAuth();
     onAuthStateChanged(auth, async (user) => {
@@ -119,6 +131,8 @@ export class App extends Component<AppProps, AppState> {
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/chat" element={<ChatWrapper />} />
+            <Route path="/chat/:characterId" element={<ChatWrapper />} />
+            <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
             <Route path="/character-creation" element={<CharacterCreationWrapper />} />
           </Routes>
         </div>

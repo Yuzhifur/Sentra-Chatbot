@@ -10,6 +10,11 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
   const currentYear = new Date().getFullYear();
   const navigate = useNavigate(); // For page navigation
 
+  // Function to handle character click and navigate to chat
+  const handleCharacterClick = (characterId: string) => {
+    navigate(`/chat/${characterId}`);
+  };
+
   return (
     <div className="sidebar">
       <div className="sidebar-top">
@@ -46,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
           <div className="history-section">
             <h3 className="section-header">Today</h3>
             {/* These will be dynamically populated when connected to database */}
-            <div className="chat-item">
+            <div className="chat-item" onClick={() => handleCharacterClick('default-character')}>
               <div className="avatar"></div>
               <span>Character 1</span>
             </div>
