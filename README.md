@@ -51,6 +51,10 @@ sentra/
 ```
 Firestore Database
 │
+├── global/                           # Global metadata
+│   └── {stats}/                      # statistics
+│       └── characterCount: int       # current count of characters
+│
 ├── users/                            # Users collection
 │   └── {userId}/                     # User document (contains profile information)
 │       ├── username: string          # User's unique username
@@ -100,7 +104,8 @@ Firestore Database
         ├── characterName: string     # Name of character in this chat
         ├── history: string           # JSON string of chat history
         ├── userID: string            # ID of user in this chat
-        └── userUsername: string      # Username of user in this chat
+        ├── userUsername: string      # Username of user in this chat
+        └── title: string             # The chat's title
 ```
 ## Relationships Between Collections
 
@@ -124,6 +129,8 @@ Firestore Database
 2. When a user creates a character:
    - A document is created in `characters/{characterId}`
    - The character ID is added to `users/{userId}/userCharacters[]`
+   - The character's int id in `characters/{characterId}/id` is assigned with `global/{stats}/characterCount`
+   - `global/{stats}/characterCount` is increamented by 1
 
 3. When a chat session starts:
    - A document is created in `chats/{chatId}`
