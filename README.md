@@ -47,6 +47,95 @@ sentra/
 ```
 ---
 
+## 💾 Firestore Database Layout
+```
+Firestore Database
+│
+├── users/                            # Users collection
+│   └── {userId}/                     # User document (contains profile information)
+│       ├── username: string          # User's unique username
+│       ├── displayName: string       # User's display name (defaults to username)
+│       ├── email: string             # User's email address
+│       ├── userAvatar: string        # URL or data for user's avatar image
+│       ├── userDescription: string   # User's self-description/bio
+│       ├── userCharacters: string[]  # Array of character IDs created by this user
+│       ├── createdAt: timestamp      # When the user account was created
+│       ├── lastLogin: timestamp      # When the user last logged in
+│       │
+│       └── chatHistory/              # Subcollection for chat history
+│           └── {chatId}/             # Individual chat document in history
+│               ├── title: string     # Title of the chat
+│               ├── createdAt: timestamp     # When chat was created
+│               └── lastMessageAt: timestamp # When last message was sent
+│
+├── characters/                       # Characters collection
+│   └── {characterId}/                # Character document
+│       ├── age: number               # Character's age
+│       ├── appearance: string        # Description of character's appearance
+│       ├── authorDisplayName: string # Display name of character creator
+│       ├── authorID: string          # User ID of character creator
+│       ├── authorUsername: string    # Username of character creator
+│       ├── avatar: string            # URL or data for character's avatar image
+│       ├── characterBackground: string # Character's backstory
+│       ├── characterDescription: string # General description of character
+│       ├── createdAt: timestamp      # When character was created
+│       ├── family: string            # Character's family information
+│       ├── gender: string            # Character's gender
+│       ├── id: string                # Character's ID (redundant with document ID)
+│       ├── isPublic: boolean         # Whether character is publicly visible
+│       ├── job: string               # Character's occupation
+│       ├── name: string              # Character's name
+│       ├── outfit: string            # Description of character's clothing
+│       ├── relationshipStatus: string # Character's relationship status
+│       ├── residence: string         # Where the character lives
+│       ├── scenario: string          # Default scenario for roleplay
+│       ├── specialAbility: string    # Character's special abilities
+│       ├── species: string           # Character's species
+│       ├── talkingStyle: string      # Character's speech patterns/style
+│       └── temperament: string       # Character's personality/temperament
+│
+└── chats/                            # Chats collection
+    └── {chatId}/                     # Chat document
+        ├── characterID: string       # ID of character in this chat
+        ├── characterName: string     # Name of character in this chat
+        ├── history: string           # JSON string of chat history
+        ├── userID: string            # ID of user in this chat
+        └── userUsername: string      # Username of user in this chat
+```
+## Relationships Between Collections
+
+1. **User → Characters**:
+   - `users/{userId}/userCharacters[]` contains IDs that reference `characters/{characterId}`
+   - `characters/{characterId}/authorID` references `users/{userId}`
+
+2. **User → Chats**:
+   - `chats/{chatId}/userID` references `users/{userId}`
+   - `users/{userId}/chatHistory/{chatId}` references chat history for a user
+
+3. **Character → Chats**:
+   - `chats/{chatId}/characterID` references `characters/{characterId}`
+
+## Data Flow
+
+1. When a user creates an account:
+   - A document is created in `users/{userId}`
+   - An empty subcollection `chatHistory` is initialized
+
+2. When a user creates a character:
+   - A document is created in `characters/{characterId}`
+   - The character ID is added to `users/{userId}/userCharacters[]`
+
+3. When a chat session starts:
+   - A document is created in `chats/{chatId}`
+   - A corresponding entry is added to `users/{userId}/chatHistory/{chatId}`
+
+4. When messages are exchanged in a chat:
+   - The `history` field in `chats/{chatId}` is updated
+   - The `lastMessageAt` field in `users/{userId}/chatHistory/{chatId}` is updated
+
+
+---
+
 ## 🔍 Features in Development
 
 - **Long-Term Memory for Chatbots**
@@ -96,7 +185,7 @@ sentra/
 - When making changes, switch to your branch and pull
 ```bash
    git checkout <yourname>
-   git pull origin main
+   git pull --rebase origin main
 ```
 
 - When commit
