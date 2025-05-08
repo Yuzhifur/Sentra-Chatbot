@@ -43,15 +43,15 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                 <div className="character-creation-main-content">
                     <h1>Welcome to Character Creation</h1>
 
-                    <div className="charaacter-creation-section">
-                        <div className="charaacter-creation-section-header" onClick={() => this.toggleSection("basic")}>
+                    <div className="character-creation-section">
+                        <div className="character-creation-section-header" onClick={() => this.toggleSection("basic")}>
                             Basic Info
-                            <span className={`charaacter-creation-section-arrow ${this.state.openSection === "basic" ? "open" : ""}`}>
+                            <span className={`character-creation-section-arrow ${this.state.openSection === "basic" ? "open" : ""}`}>
                                 ▶
                             </span>
                         </div>
                         {this.state.openSection === "basic" && (
-                            <div className="charaacter-creation-section-content">
+                            <div className="character-creation-section-content">
                                 <p>
                                     <label>
                                         Name:
@@ -131,6 +131,54 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                                 </p>
 
 
+                            </div>
+                        )}
+                        <div className="character-creation-section-header" onClick={() => this.toggleSection("personality")}>
+                            Personality
+                            <span className={`character-creation-section-arrow ${this.state.openSection === "personality" ? "open" : ""}`}>
+                                ▶
+                            </span>
+                        </div>
+                        {this.state.openSection === "personality" && (
+                            <div className="character-creation-section-content">
+                                <p>
+                                    <label>
+                                        Personality Traits:
+                                        <input type="text" name="name" />
+                                    </label>
+                                </p>
+                            </div>
+                        )}
+                        <div className="character-creation-section-header" onClick={() => this.toggleSection("skills")}>
+                            Skills & Attributes
+                            <span className={`character-creation-section-arrow ${this.state.openSection === "skills" ? "open" : ""}`}>
+                                ▶
+                            </span>
+                        </div>
+                        {this.state.openSection === "skills" && (
+                            <div className="character-creation-section-content">
+                                <p>
+                                    <label>
+                                        Skills:
+                                        <input type="text" name="name" />
+                                    </label>
+                                </p>
+                            </div>
+                        )}
+                        <div className="character-creation-section-header" onClick={() => this.toggleSection("social")}>
+                            Social Alignment
+                            <span className={`character-creation-section-arrow ${this.state.openSection === "social" ? "open" : ""}`}>
+                                ▶
+                            </span>
+                        </div>
+                        {this.state.openSection === "social" && (
+                            <div className="character-creation-section-content">
+                                <p>
+                                    <label>
+                                        Moral Alignment:
+                                        <input type="text" name="name" />
+                                    </label>
+                                </p>
                             </div>
                         )}
                     </div>

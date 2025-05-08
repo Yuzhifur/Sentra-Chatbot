@@ -14,7 +14,7 @@
     overflow-y: auto;
 }
 
-.charaacter-creation-section-header {
+.character-creation-section-header {
     width: 800px;
     display: flex;
     justify-content: space-between;
@@ -28,15 +28,15 @@
     transition: background-color 0.2s ease;
 }
   
-.charaacter-creation-section-header:hover {
+.character-creation-section-header:hover {
     background-color: #ddd;
 }
 
-.charaacter-creation-section-arrow {
+.character-creation-section-arrow {
     transition: transform 0.3s ease;
 }
 
-.charaacter-creation-section-arrow.open {
+.character-creation-section-arrow.open {
     transform: rotate(90deg);
 }
 
