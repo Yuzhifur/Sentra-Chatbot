@@ -69,8 +69,8 @@ Firestore Database
 │       └── chatHistory/              # Subcollection for chat history
 │           └── {chatId}/             # Individual chat document in history
 │               ├── title: string     # Title of the chat
-│               ├── createdAt: timestamp     # When chat was created
-│               └── lastMessageAt: timestamp # When last message was sent
+│               ├── avatar: string    # Same with character avatar
+│               └── lastUpdated: timestamp # When last message was sent
 │
 ├── characters/                       # Characters collection
 │   └── {characterId}/                # Character document
@@ -138,7 +138,7 @@ Firestore Database
 
 4. When messages are exchanged in a chat:
    - The `history` field in `chats/{chatId}` is updated
-   - The `lastMessageAt` field in `users/{userId}/chatHistory/{chatId}` is updated
+   - The `lastUpdated` field in `users/{userId}/chatHistory/{chatId}` is updated
 
 
 ---
