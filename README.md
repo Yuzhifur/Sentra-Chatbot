@@ -70,6 +70,7 @@ Firestore Database
 │           └── {chatId}/             # Individual chat document in history
 │               ├── title: string     # Title of the chat
 │               ├── avatar: string    # Same with character avatar
+│               ├── characterID: string # ID of character in this chat
 │               └── lastUpdated: timestamp # When last message was sent
 │
 ├── characters/                       # Characters collection
