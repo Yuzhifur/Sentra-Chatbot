@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import SearchBar from '../components/SearchBar';
 
 const Home: React.FC = () => {
   // Get Firestore and Storage instances
   const db = getFirestore();
-  const storage = getStorage();
+  const storage = getStorage();  // for images for the popup
 
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
@@ -41,6 +41,7 @@ const Home: React.FC = () => {
   const characterCollectionRef = collection(db, "characters");
   const [characterList, setCharacterList] = useState([]);  // for showing characters
   const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);  // for popup
+  const [placeholderUrl, setPlaceholderUrl] = useState<string | null>(null);  // for placeholder.png
 
   // fetch the character data from Firestore
   useEffect(() => {
@@ -57,6 +58,21 @@ const Home: React.FC = () => {
     };
 
     getCharacterList();
+  }, []);
+
+  // get the URL of placeholder.png from Storage
+  useEffect(() => {
+    const loadPlaceholder = async () => {
+      try {
+        const placeholderRef = ref(storage, "placeholder.png");
+        const url = await getDownloadURL(placeholderRef);
+        setPlaceholderUrl(url);
+      } catch (error) {
+        console.error("Error loading placeholder image:", error);
+      }
+    };
+  
+    loadPlaceholder();
   }, []);
 
   return (
@@ -89,7 +105,7 @@ const Home: React.FC = () => {
               <div
                 className="character-image"
                 style={{
-                  backgroundImage: `url(${char.imageUrl || "/placeholder.png"})`,
+                  backgroundImage: `url(${char.imageUrl || placeholderUrl || ""})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
