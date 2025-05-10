@@ -25,6 +25,7 @@ const CharacterChatPopup: React.FC<CharacterChatPopupProps> = ({
 }) => {
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [creatingChat, setCreatingChat] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,15 +75,25 @@ const CharacterChatPopup: React.FC<CharacterChatPopupProps> = ({
   }, [characterId, characterName]);
 
   const handleNewChat = async () => {
+    if (creatingChat) return; // Prevent multiple clicks
+
     try {
-      const newChatId = await ChatService.createChatSession(characterId);
-      navigate(`/chat/${characterId}/${newChatId}`);
+      setCreatingChat(true);
+      // Close the popup immediately to prevent further clicks
+      onClose();
+
+      // Navigate directly to the character page without chatId
+      // Let the ChatWrapper component handle the creation
+      navigate(`/chat/${characterId}`);
     } catch (error) {
       console.error("Error creating new chat:", error);
+      setCreatingChat(false);
     }
   };
 
   const handleChatSelect = (chatId: string) => {
+    // Close the popup to prevent multiple clicks
+    onClose();
     navigate(`/chat/${characterId}/${chatId}`);
   };
 
@@ -96,9 +107,15 @@ const CharacterChatPopup: React.FC<CharacterChatPopupProps> = ({
 
         <div className="chat-popup-options">
           {/* New Chat Option */}
-          <div className="chat-option new-chat" onClick={handleNewChat}>
+          <div
+            className="chat-option new-chat"
+            onClick={handleNewChat}
+            style={{ opacity: creatingChat ? 0.6 : 1, cursor: creatingChat ? 'not-allowed' : 'pointer' }}
+          >
             <div className="chat-option-icon">+</div>
-            <div className="chat-option-text">Start New Chat</div>
+            <div className="chat-option-text">
+              {creatingChat ? 'Creating Chat...' : 'Start New Chat'}
+            </div>
           </div>
 
           {/* Existing Chats */}
