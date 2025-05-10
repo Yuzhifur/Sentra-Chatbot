@@ -70,7 +70,7 @@ Firestore Database
 │           └── {chatId}/             # Individual chat document in history
 │               ├── title: string     # Title of the chat
 │               ├── avatar: string    # Same with character avatar
-│               ├── characterID: string # ID of character in this chat
+│               ├── characterId: string # ID of character in this chat
 │               └── lastUpdated: timestamp # When last message was sent
 │
 ├── characters/                       # Characters collection
@@ -99,12 +99,12 @@ Firestore Database
 │       ├── talkingStyle: string      # Character's speech patterns/style
 │       └── temperament: string       # Character's personality/temperament
 │
-└── chat/                            # Chats collection
+└── chats/                            # Chats collection
     └── {chatId}/                     # Chat document
-        ├── characterID: string       # ID of character in this chat
+        ├── characterId: string       # ID of character in this chat
         ├── characterName: string     # Name of character in this chat
         ├── history: string           # JSON string of chat history
-        ├── userID: string            # ID of user in this chat
+        ├── userId: string            # ID of user in this chat
         ├── userUsername: string      # Username of user in this chat
         └── title: string             # The chat's title
 ```
@@ -119,7 +119,7 @@ Firestore Database
    - `users/{userId}/chatHistory/{chatId}` references chat history for a user
 
 3. **Character → Chats**:
-   - `chats/{chatId}/characterID` references `characters/{characterId}`
+   - `chats/{chatId}/characterId` references `characters/{characterId}`
 
 ## Data Flow
 
