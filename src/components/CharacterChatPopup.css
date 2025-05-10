@@ -1,0 +1,121 @@
+.chat-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.chat-popup-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.chat-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-popup-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1a1a2e;
+}
+
+.chat-popup-close {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #666;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.chat-popup-close:hover {
+  color: #f44336;
+}
+
+.chat-popup-options {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-option {
+  height: 80px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.new-chat {
+  background: linear-gradient(135deg, #4285f4, #34a853);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-option-icon {
+  font-size: 1.8rem;
+  margin-right: 10px;
+}
+
+.chat-option-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.history-chat {
+  border: 1px solid #e5e7eb;
+  background-size: cover;
+  background-position: center;
+  background-color: #f5f8ff;
+}
+
+.chat-option-content {
+  flex: 1;
+}
+
+.chat-option-title {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px;
+  font-size: 0.9rem;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  max-width: 70%;
+  border-top-left-radius: 8px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.chat-loading, .no-history {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}

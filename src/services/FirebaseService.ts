@@ -85,7 +85,7 @@ export class FirebaseService {
     await addDoc(chatHistoryRef, {
       title: "Welcome to Sentra!",
       createdAt: serverTimestamp(),
-      lastMessageAt: serverTimestamp()
+      lastUpdated: serverTimestamp()
     });
   }
 
@@ -118,17 +118,17 @@ export class FirebaseService {
   static async getNextCharacterId(): Promise<number> {
     const db = getFirestore();
     const statsDocRef = doc(db, "global", "stats");
-    
+
     try {
       // Use transaction to ensure ID uniqueness
       const statsDoc = await getDoc(statsDocRef);
-      
+
       let currentCount = 1;
-      
+
       if (statsDoc.exists()) {
         const data = statsDoc.data();
         currentCount = (data.characterCount || 0) + 1;
-        
+
         // Update the counter
         await updateDoc(statsDocRef, {
           characterCount: currentCount
@@ -139,7 +139,7 @@ export class FirebaseService {
           characterCount: currentCount
         });
       }
-      
+
       return currentCount;
     } catch (error) {
       console.error("Error getting next character ID:", error);
@@ -151,18 +151,18 @@ export class FirebaseService {
   static async addCharacterToUserList(userId: string, characterId: string): Promise<void> {
     const db = getFirestore();
     const userRef = doc(db, "users", userId);
-    
+
     // Get current user data
     const userSnapshot = await getDoc(userRef);
-    
+
     if (userSnapshot.exists()) {
       const userData = userSnapshot.data();
       let userCharacters = userData.userCharacters || [];
-      
+
       // Only add if not already in the array
       if (!userCharacters.includes(characterId)) {
         userCharacters.push(characterId);
-        
+
         // Update the user document
         await updateDoc(userRef, {
           userCharacters: userCharacters
@@ -177,18 +177,18 @@ export class FirebaseService {
   static async getUserCharacters(userId: string): Promise<any[]> {
     try {
       const userData = await this.getUserData(userId);
-      
+
       if (!userData || !userData.userCharacters || userData.userCharacters.length === 0) {
         return [];
       }
-      
+
       const db = getFirestore();
       const characters = [];
-      
+
       // Fetch each character document
       for (const characterId of userData.userCharacters) {
         const characterDoc = await getDoc(doc(db, "characters", characterId));
-        
+
         if (characterDoc.exists()) {
           characters.push({
             id: characterId,
@@ -196,7 +196,7 @@ export class FirebaseService {
           });
         }
       }
-      
+
       return characters;
     } catch (error) {
       console.error("Error fetching user characters:", error);

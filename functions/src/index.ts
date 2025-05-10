@@ -75,7 +75,7 @@ export const processChat = functions.https.onCall(async (data, context) => {
 
     // Get user message (last message in the array)
     const userMessage = messages[messages.length - 1];
-    
+
     // Format previous conversation for context
     const conversationHistory = formatConversationHistory(messages.slice(0, -1));
 
@@ -96,7 +96,7 @@ export const processChat = functions.https.onCall(async (data, context) => {
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Update lastMessageAt in user's chatHistory
+    // Update lastUpdated in user's chatHistory
     const chatHistoryQuery = await db
       .collection("users")
       .doc(userId)
@@ -108,7 +108,7 @@ export const processChat = functions.https.onCall(async (data, context) => {
     if (!chatHistoryQuery.empty) {
       const chatHistoryRef = chatHistoryQuery.docs[0].ref;
       await chatHistoryRef.update({
-        lastMessageAt: admin.firestore.FieldValue.serverTimestamp()
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp()
       });
     }
 
@@ -118,11 +118,11 @@ export const processChat = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error("Error processing chat:", error);
-    
+
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
-    
+
     throw new functions.https.HttpsError(
       "internal",
       error instanceof Error ? error.message : "Unknown error"
@@ -170,14 +170,14 @@ Be engaging, authentic, and responsive to create an immersive roleplay experienc
 // Format conversation history for Claude API
 function formatConversationHistory(messages: Message[]): string {
   if (messages.length === 0) return "";
-  
+
   let history = "";
-  
+
   messages.forEach(msg => {
     const role = msg.role === "user" ? "Human" : "Assistant";
     history += `${role}: ${msg.content}\n\n`;
   });
-  
+
   return history;
 }
 
@@ -185,14 +185,14 @@ function formatConversationHistory(messages: Message[]): string {
 async function callClaudeAPI(systemPrompt: string, conversationHistory: string, userMessage: string): Promise<string> {
   try {
     const apiKey = process.env.CLAUDE_API_KEY;
-    
+
     if (!apiKey) {
       throw new Error("Claude API key not configured");
     }
-    
+
     // Prepare prompt for Claude
     const prompt = `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage}\n\nAssistant:`;
-    
+
     // Call Claude API
     const response = await axios.post(
       "https://api.anthropic.com/v1/complete",
@@ -210,12 +210,12 @@ async function callClaudeAPI(systemPrompt: string, conversationHistory: string, 
         }
       }
     );
-    
+
     // Return Claude's response
     return response.data.completion.trim();
   } catch (error) {
     console.error("Error calling Claude API:", error);
-    
+
     // Return graceful fallback response if API call fails
     return "I seem to be having trouble with my thoughts right now. Could you please repeat that?";
   }

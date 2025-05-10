@@ -6,6 +6,7 @@ import { FirebaseService } from '../services/FirebaseService';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import SearchBar from '../components/SearchBar';
+import CharacterChatPopup from '../components/CharacterChatPopup';
 
 const Home: React.FC = () => {
   // Get Firestore and Storage instances
@@ -15,6 +16,9 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);
+  const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
+  const [characterForChat, setCharacterForChat] = useState<{id: string, name: string} | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -39,9 +43,8 @@ const Home: React.FC = () => {
   }, []);
 
   const characterCollectionRef = collection(db, "characters");
-  const [characterList, setCharacterList] = useState([]);  // for showing characters
-  const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);  // for popup
-  const [placeholderUrl, setPlaceholderUrl] = useState<string | null>(null);  // for placeholder.png
+  const [characterList, setCharacterList] = useState([]);
+  const [placeholderUrl, setPlaceholderUrl] = useState<string | null>(null);
 
   // fetch the character data from Firestore
   useEffect(() => {
@@ -50,6 +53,7 @@ const Home: React.FC = () => {
         const data = await getDocs(characterCollectionRef);
         const filteredData = data.docs.map((doc) => ({
           ...doc.data(),
+          docId: doc.id // Store the document ID separately
         }));
         setCharacterList(filteredData);
       } catch (err) {
@@ -71,9 +75,14 @@ const Home: React.FC = () => {
         console.error("Error loading placeholder image:", error);
       }
     };
-  
+
     loadPlaceholder();
   }, []);
+
+  const handleStartChat = (characterId: string, characterName: string) => {
+    setCharacterForChat({ id: characterId, name: characterName });
+    setShowChatPopup(true);
+  };
 
   return (
     <div className="main-content">
@@ -98,9 +107,10 @@ const Home: React.FC = () => {
         {/* Populate character info from firestore database */}
         {characterList.length > 0 ? (
           characterList.map((char) => (
-            <div key={char.id}
-            className="character-card"
-            onClick={() => setSelectedCharacter(char)}
+            <div
+              key={char.id}
+              className="character-card"
+              onClick={() => setSelectedCharacter(char)}
             >
               <div
                 className="character-image"
@@ -144,7 +154,7 @@ const Home: React.FC = () => {
         <a href="#">Blog</a>
       </div>
 
-      {/* Popup */}
+      {/* Character Popup */}
       {selectedCharacter && (
         <div className="modal-overlay" onClick={() => setSelectedCharacter(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -158,21 +168,31 @@ const Home: React.FC = () => {
             {selectedCharacter.imageUrl && (
               <img src={selectedCharacter.imageUrl} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
             )}
-            <span
-            className="chat-item"
-            onClick={() => navigate('/chat')}
-            title="Create new Chat"
-            style={{
-              cursor: 'pointer',
-              fontSize: '15px',
-              marginLeft: '10px'
-            }}
-            >Let's Chat! ✏️</span>
+            <button
+              className="chat-item"
+              onClick={() => handleStartChat(selectedCharacter.docId, selectedCharacter.name)}
+              style={{
+                cursor: 'pointer',
+                fontSize: '15px',
+                marginLeft: '10px'
+              }}
+            >
+              Let's Chat! ✏️
+            </button>
           </div>
         </div>
       )}
+
+      {/* Chat History Popup */}
+      {showChatPopup && characterForChat && (
+        <CharacterChatPopup
+          characterId={characterForChat.id}
+          characterName={characterForChat.name}
+          onClose={() => setShowChatPopup(false)}
+        />
+      )}
     </div>
   );
-}
+};
 
 export default Home;
