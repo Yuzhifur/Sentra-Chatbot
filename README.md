@@ -134,6 +134,7 @@ Firestore Database
    - The character ID is added to `users/{userId}/userCharacters[]`
    - The character's int id in `characters/{characterId}/id` is assigned with `global/{stats}/characterCount`
    - `global/{stats}/characterCount` is increamented by 1
+   - Notice that character's int id is difffrent from {characterId}: int id is initialized to characterCount while {characterId} is generated string
 
 3. When a chat session starts:
    - A document is created in `chats/{chatId}`
