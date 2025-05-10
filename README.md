@@ -99,7 +99,7 @@ Firestore Database
 │       ├── talkingStyle: string      # Character's speech patterns/style
 │       └── temperament: string       # Character's personality/temperament
 │
-└── chats/                            # Chats collection
+└── chat/                            # Chats collection
     └── {chatId}/                     # Chat document
         ├── characterID: string       # ID of character in this chat
         ├── characterName: string     # Name of character in this chat
