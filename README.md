@@ -106,6 +106,8 @@ Firestore Database
         ├── history: string           # JSON string of chat history
         ├── userId: string            # ID of user in this chat
         ├── userUsername: string      # Username of user in this chat
+        ├── createdAt: timestamp
+        ├── updatedAt: timestamp
         └── title: string             # The chat's title
 ```
 ## Relationships Between Collections
