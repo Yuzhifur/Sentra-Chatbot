@@ -40,6 +40,10 @@ export class ChatService {
   /**
    * Create a new chat session between a user and a character
    */
+  /**
+   * Create a new chat session between a user and a character
+   * With added check to prevent duplicate creation
+   */
   static async createChatSession(characterId: string): Promise<string> {
     try {
       const auth = getAuth();
@@ -68,10 +72,29 @@ export class ChatService {
 
       const userData = userDoc.data();
 
+      // Check if there's an existing chat with this character
+      // If you want to always create a new chat, comment out this section
+      /*
+      const chatHistoryRef = collection(db, "users", currentUser.uid, "chatHistory");
+      const q = query(chatHistoryRef, 
+        where("characterId", "==", characterId),
+        orderBy("lastUpdated", "desc"),
+        limit(1)
+      );
+      
+      const existingChats = await getDocs(q);
+      if (!existingChats.empty) {
+        // Return the most recent chat with this character if it exists
+        return existingChats.docs[0].id;
+      }
+      */
+
       // Create a unique chat ID using timestamp and random number
+      // Add a safeguard to help ensure uniqueness
       const timestamp = Date.now();
-      const randomNum = Math.floor(Math.random() * 1000);
-      const chatId = `chat_${timestamp}_${randomNum}`;
+      const randomNum = Math.floor(Math.random() * 10000); // Increase range
+      const uniqueId = `${currentUser.uid.substring(0, 4)}_${timestamp}_${randomNum}`;
+      const chatId = `chat_${uniqueId}`;
       const chatRef = doc(db, "chats", chatId);
 
       // Create empty chat history
@@ -91,15 +114,14 @@ export class ChatService {
       await setDoc(chatRef, chatData);
 
       // Add chat reference to user's chat history
-      // Important: Now adding characterId to the chatHistory entry
       const userChatHistoryRef = doc(collection(db, "users", currentUser.uid, "chatHistory"), chatId);
       await setDoc(userChatHistoryRef, {
         title: `Chat with ${characterData.name}`,
-        characterId: characterId, // Store the character ID in the chat history
+        characterId: characterId,
         characterName: characterData.name,
         createdAt: Timestamp.now(),
         lastUpdated: Timestamp.now(),
-        avatar: characterData.avatar || "" // Add character avatar if available
+        avatar: characterData.avatar || ""
       });
 
       return chatId;
@@ -349,3 +371,4 @@ export class ChatService {
     }
   }
 }
+

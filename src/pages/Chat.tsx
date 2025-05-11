@@ -1,4 +1,4 @@
-import React, { Component, FormEvent, ChangeEvent, useEffect, useState } from 'react';
+import React, { Component, FormEvent, ChangeEvent, useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { getAuth } from 'firebase/auth';
@@ -9,31 +9,45 @@ import './Chat.css';
 // Wrapper component to use hooks
 const ChatWrapper: React.FC = () => {
   const navigate = useNavigate();
-  const { characterId, chatId } = useParams();
+  const { characterId, sessionId } = useParams();
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [initialChatId, setInitialChatId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use a ref to track if we've already initialized
+  const hasInitialized = useRef<boolean>(false);
 
   useEffect(() => {
+    // This function runs only once to set up the chat
     const setupChat = async () => {
+      // Check if we've already initialized to prevent double execution
+      if (hasInitialized.current) {
+        return;
+      }
+      
+      // Mark as initialized immediately to prevent concurrent calls
+      hasInitialized.current = true;
+      
       try {
-        // Case 1: Both characterId and chatId exist - use existing chat session
-        if (characterId && chatId) {
-          console.log(`Using existing chat: ${chatId} with character: ${characterId}`);
-          setInitialChatId(chatId);
+        // Case 1: Both characterId and sessionId exist - use existing chat session
+        if (characterId && sessionId) {
+          console.log(`Using existing chat: ${sessionId} with character: ${characterId}`);
+          setInitialChatId(sessionId);
           setInitialLoading(false);
           return;
         }
 
         // Case 2: Only characterId exists - create a new chat session
-        if (characterId && !chatId) {
+        if (characterId && !sessionId) {
           console.log(`Creating new chat with character: ${characterId}`);
           const newChatId = await ChatService.createChatSession(characterId);
+          
+          // Set local state first
           setInitialChatId(newChatId);
-
-          // Update URL with the new chat ID without triggering a new navigation
-          navigate(`/chat/${characterId}/${newChatId}`, { replace: true });
           setInitialLoading(false);
+          
+          // Then update URL with the new chat ID without triggering a new navigation
+          navigate(`/chat/${characterId}/${newChatId}`, { replace: true });
           return;
         }
 
@@ -44,6 +58,8 @@ const ChatWrapper: React.FC = () => {
         console.error("Error setting up chat session:", error);
         setError(error instanceof Error ? error.message : "Unknown error");
         setInitialLoading(false);
+        // Reset initialization flag on error so we can try again
+        hasInitialized.current = false;
       }
     };
 
@@ -51,7 +67,7 @@ const ChatWrapper: React.FC = () => {
     if (initialLoading) {
       setupChat();
     }
-  }, [characterId, chatId, navigate, initialLoading]);
+  }, [characterId, sessionId, navigate, initialLoading]);
 
   if (initialLoading) {
     return (

@@ -82,7 +82,7 @@ const CharacterChatPopup: React.FC<CharacterChatPopupProps> = ({
       // Close the popup immediately to prevent further clicks
       onClose();
 
-      // Navigate directly to the character page without chatId
+      // Navigate directly to the character page without sessionId
       // Let the ChatWrapper component handle the creation
       navigate(`/chat/${characterId}`);
     } catch (error) {
@@ -94,6 +94,7 @@ const CharacterChatPopup: React.FC<CharacterChatPopupProps> = ({
   const handleChatSelect = (chatId: string) => {
     // Close the popup to prevent multiple clicks
     onClose();
+    // Use the sessionId parameter name to match the route definition
     navigate(`/chat/${characterId}/${chatId}`);
   };
 

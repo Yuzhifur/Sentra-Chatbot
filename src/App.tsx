@@ -127,14 +127,14 @@ export class App extends Component<AppProps, AppState> {
           <Sidebar doResetDashboard={this.doResetDashboard} />
         </div>
         <div className="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/chat" element={<ChatWrapper />} />
-            <Route path="/chat/:characterId" element={<ChatWrapper />} />
-            <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
-            <Route path="/character-creation" element={<CharacterCreationWrapper />} />
-          </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/chat" element={<ChatWrapper />} />
+          <Route path="/chat/:characterId" element={<ChatWrapper />} />
+          <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
+          <Route path="/character-creation" element={<CharacterCreationWrapper />} />
+        </Routes>
         </div>
       </div>
     );
