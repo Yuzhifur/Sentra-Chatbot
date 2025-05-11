@@ -1,6 +1,7 @@
 .user-profile-page {
   display: flex;
   height: 100vh;
+  z-index: 0;
 }
 
 .user-main-content {

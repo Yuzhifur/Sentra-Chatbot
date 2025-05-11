@@ -21,6 +21,8 @@ import {
   Timestamp
 } from 'firebase/firestore';
 
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+
 export interface UserData {
   username: string;
   displayName: string;
@@ -203,4 +205,29 @@ export class FirebaseService {
       throw error;
     }
   }
+
+  static async updateUserData(userID: string, updatedData: any): Promise<void> {
+    try {
+      const db = getFirestore();
+      const userRef = doc(db, 'users', userID);
+      await setDoc(userRef, updatedData, { merge: true });
+    } catch (error) {
+      console.error("Error updating user data:", error);
+      throw error;
+    }
+  }
+
+  // Profile Picture Upload
+  static async uploadProfilePicture(userId: string, file: File): Promise<any> {
+    const storage = getStorage();
+    const storageRef = ref(storage, `profilePictures/${userId}/${file.name}`);
+
+    // Upload the file to Firebase Storage
+    await uploadBytes(storageRef, file); // Upload the file
+    return storageRef; // Return the reference to the uploaded file
+  }
+
+
+
+
 }

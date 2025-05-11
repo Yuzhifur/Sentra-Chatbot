@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import UserSettingsPopup from '../components/UserSettingsPopup';
 import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
 import './UserProfile.css';
@@ -17,6 +18,7 @@ const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showSettingsPopup, setShowSettingsPopup] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -49,6 +51,32 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleSaveSettings = async (bio: string, profilePicture: File | null) => {
+    try {
+      if (userData) {
+        // Update bio
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
+        const updatedData = { ...userData, userDescription: bio };
+
+        // Update profile picture if provided
+        if (profilePicture) {
+          if (currentUser) {
+            const storageRef = await FirebaseService.uploadProfilePicture(currentUser.uid, profilePicture);
+            const profilePictureUrl = await storageRef.getDownloadURL();
+            updatedData.userAvatar = profilePictureUrl;
+          }
+        }
+
+        // Save updated data to Firebase
+        FirebaseService.updateUserData(currentUser.uid, updatedData);
+        setUserData(updatedData);
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error);
+    }
+  };
+
   return (
     <div className="user-profile-page">
       {/* Sidebar */}
@@ -75,9 +103,19 @@ const UserProfile: React.FC = () => {
               <span>0 Interactions</span>
             </div>
 
+            {/* Bio */}
+            <div className="user-bio">
+              <p>{userData?.userDescription || 'No bio available'}</p>
+            </div>
+
             {/* Settings Buttons */}
             <div className="user-settings-buttons">
-              <button className="user-settings-button">Settings</button>
+              <button
+                className="user-settings-button"
+                onClick={() => setShowSettingsPopup(true)}
+              >
+                  Settings
+              </button>
               <button className="user-settings-button">Share</button>
               <button
                 className="user-logout-button"
@@ -102,6 +140,14 @@ const UserProfile: React.FC = () => {
           </>
         )}
       </div>
+      {/* Settings Popup */}
+      {showSettingsPopup && (
+        <UserSettingsPopup
+          onClose={() => setShowSettingsPopup(false)}
+          onSave={handleSaveSettings}
+          currentBio={userData?.userDescription || ''}
+        />
+      )}
     </div>
   );
 };
