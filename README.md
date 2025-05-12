@@ -1,4 +1,4 @@
-# Sentra: Immersive AI Roleplay Chatbots
+# Sentra: Immersive AI Roleplay Chatbots V1.0.0
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
@@ -147,19 +147,45 @@ Firestore Database
 
 ---
 
-## 🔍 Features in Development
+## 🧪 Current Available Use Cases (May 12, 2025, V1.0.0)
 
-- **Long-Term Memory for Chatbots**
-  Each chatbot has a memory page per user, allowing it to recall past interactions even in new sessions.
+Sentra supports the following key features and workflows for users:
 
-- **User Self-Description**
-  Users can configure aspects of their persona to make roleplay more tailored and believable.
+### 1. 🔐 Authentication
+- **Login**: Existing users can sign in using their registered email and password.
+- **Create Account**: New users can register an account with email, username, and optional display name.
+- **Reset Password**: Users can request a password reset via email.
+- **Logout**: Authenticated users can securely log out of their session.
 
-- **Unprompted Messaging**
-  Chatbots can send messages spontaneously, reviving idle conversations.
+### 2. 🧙‍♀️ Character Creation
+- Users can create detailed custom characters with fields like:
+  - Name, appearance, background, species, gender, job, and more.
+- Created characters are stored in the `characters/` collection and linked to the creator via `users/{userId}/userCharacters[]`.
 
-- **Shared Memory Between Friends**
-  With permission, chatbots can reference and retrieve past conversations with the user's friends.
+### 3. 🔍 Search Functionality
+- Users can search for:
+  - Other users by username.
+  - Publicly visible characters by name or attributes.
+- Search results provide clickable access to profile (not yet) and character pop ups for initiating a chat.
+
+### 4. 📁 Chat History Sidebar
+- A persistent sidebar displays the user's previous chat sessions, sorted by `lastUpdated`.
+- Each entry includes:
+  - Character avatar
+  - Chat title
+  - Timestamp
+- Clicking an entry reopens the associated chat session.
+
+### 5. 💬 Chat Creation and Access
+- Users can start a new chat from a character’s profile page.
+- A modal popup allows choosing between starting a new chat or continuing an existing one.
+- Each chat session is recorded in both the `chats/` collection and the user’s `chatHistory/` subcollection.
+
+### 6. 🤖 Chatting with AI Characters
+- Users can engage in immersive conversations with AI-driven characters.
+- Each session supports:
+  - Real-time message exchange
+  - Character-specific memory
 
 ---
 
