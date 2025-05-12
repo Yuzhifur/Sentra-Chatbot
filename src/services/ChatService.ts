@@ -15,6 +15,7 @@ import {
   DocumentReference
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions'
 
 export interface Message {
   role: string;  // 'user' or 'assistant'
@@ -242,13 +243,25 @@ export class ChatService {
       const messages = await this.getChatMessages(chatId);
 
       // Generate AI response (simulated for now)
-      // This would be replaced with your actual AI implementation
-      const lastMessage = messages[messages.length - 1]?.content || '';
-      const aiResponse: Message = {
-        role: 'assistant',
-        content: `I am ${characterData.name}. This is a simulated response to: "${lastMessage}". In a real implementation, this would be a response from Claude API based on my character profile: ${characterData.characterDescription}`,
-        timestamp: Timestamp.now()
+      const functions = getFunctions();
+      const processChatFunction = httpsCallable(functions, 'processChat');
+
+      // Prepare data for the cloud function
+      const functionData = {
+        messages: messages,
+        characterId: chatData.characterId,
+        sessionId: chatId
       };
+
+      // Call the cloud function
+      const result = await processChatFunction(functionData);
+      const functionResponse = result.data as {success: boolean, aiMessage: Message};
+
+      if (!functionResponse.success) {
+        throw new Error('Failed to generate AI response');
+      }
+
+      const aiResponse = functionResponse.aiMessage;
 
       // Add AI response to chat history
       const updatedMessages = [...messages, aiResponse];
