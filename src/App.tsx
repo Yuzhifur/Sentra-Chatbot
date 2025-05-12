@@ -134,7 +134,7 @@ export class App extends Component<AppProps, AppState> {
           <Route path="/chat/:characterId" element={<ChatWrapper />} />
           <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
           <Route path="/character-creation" element={<CharacterCreationWrapper />} />
-        </Routes>
+    </Routes>
         </div>
       </div>
     );

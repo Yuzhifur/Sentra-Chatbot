@@ -13,17 +13,22 @@
 
 .sidebar-top {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .sidebar-header {
-  padding: 0 20px 20px;
+  padding: 0 0 20px;
   border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sidebar-title {
   font-size: 32px;
   margin: 0;
-  padding: 20px 0;
+  padding: 0;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -58,14 +63,9 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.chat-item {
-  opacity: 0.8;
-  transform: scale(1.1);
-  transition: all 0.2s ease;
-}
-
 .chat-history {
   margin-top: 20px;
+  overflow-y: auto;
 }
 
 .history-section {
@@ -75,6 +75,7 @@
 .section-header {
   font-size: 18px;
   margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .chat-item {
@@ -84,6 +85,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-bottom: 5px;
 }
 
 .chat-item:hover {
@@ -94,8 +96,34 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: white;
+  background-color: #3b82f6;
   margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-item-content {
+  overflow: hidden;
+  flex: 1;
+}
+
+.chat-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: white;
+  font-size: 14px;
 }
 
 .sidebar-footer {
@@ -103,4 +131,5 @@
   text-align: center;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid #333;
 }

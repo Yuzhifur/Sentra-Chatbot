@@ -4,7 +4,9 @@ import Sidebar from '../components/Sidebar';
 import { getAuth } from 'firebase/auth';
 import { ChatService, Message } from '../services/ChatService';
 import { CharacterService } from '../services/CharacterService';
+import ChatTitleEditor from '../components/ChatTitleEditor';
 import './Chat.css';
+import '../components/ChatTitleEditor.css';
 
 // Wrapper component to use hooks
 const ChatWrapper: React.FC = () => {
@@ -13,6 +15,7 @@ const ChatWrapper: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [initialChatId, setInitialChatId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chatTitle, setChatTitle] = useState<string>('');
   
   // Use a ref to track if we've already initialized
   const hasInitialized = useRef<boolean>(false);
@@ -32,6 +35,16 @@ const ChatWrapper: React.FC = () => {
         // Case 1: Both characterId and sessionId exist - use existing chat session
         if (characterId && sessionId) {
           console.log(`Using existing chat: ${sessionId} with character: ${characterId}`);
+          
+          // Get the chat data to retrieve the title
+          const chatData = await ChatService.getChatSession(sessionId);
+          if (chatData.title) {
+            setChatTitle(chatData.title);
+          } else {
+            // If no title exists, set a default one based on character name
+            setChatTitle(`Chat with ${chatData.characterName}`);
+          }
+          
           setInitialChatId(sessionId);
           setInitialLoading(false);
           return;
@@ -41,6 +54,10 @@ const ChatWrapper: React.FC = () => {
         if (characterId && !sessionId) {
           console.log(`Creating new chat with character: ${characterId}`);
           const newChatId = await ChatService.createChatSession(characterId);
+          
+          // Get character name to set a default title
+          const characterData = await CharacterService.getCharacter(characterId);
+          setChatTitle(`Chat with ${characterData.name}`);
           
           // Set local state first
           setInitialChatId(newChatId);
@@ -118,6 +135,7 @@ const ChatWrapper: React.FC = () => {
     <Chat
       chatId={initialChatId}
       characterId={characterId}
+      initialChatTitle={chatTitle}
       return={() => navigate('/')}
     />
   );
@@ -126,6 +144,7 @@ const ChatWrapper: React.FC = () => {
 type ChatProps = {
   chatId: string;
   characterId: string;
+  initialChatTitle: string;
   return: () => void;
 };
 
@@ -138,6 +157,7 @@ type ChatState = {
   characterDescription: string;
   characterAvatar: string;
   userName: string;
+  chatTitle: string;
 };
 
 export class Chat extends Component<ChatProps, ChatState> {
@@ -153,7 +173,8 @@ export class Chat extends Component<ChatProps, ChatState> {
       characterName: 'Character',
       characterDescription: '',
       characterAvatar: '',
-      userName: 'User'
+      userName: 'User',
+      chatTitle: props.initialChatTitle || 'Chat'
     };
     this.messagesEndRef = React.createRef();
   }
@@ -175,6 +196,11 @@ export class Chat extends Component<ChatProps, ChatState> {
     if (prevProps.chatId !== this.props.chatId) {
       this.loadChatData();
     }
+    
+    // Update title if initial title changes
+    if (prevProps.initialChatTitle !== this.props.initialChatTitle) {
+      this.setState({ chatTitle: this.props.initialChatTitle });
+    }
   }
 
   scrollToBottom = () => {
@@ -185,6 +211,12 @@ export class Chat extends Component<ChatProps, ChatState> {
     try {
       const messages = await ChatService.getChatMessages(this.props.chatId);
       this.setState({ messages });
+      
+      // Get chat session to get the title
+      const chatSession = await ChatService.getChatSession(this.props.chatId);
+      if (chatSession.title && chatSession.title !== this.state.chatTitle) {
+        this.setState({ chatTitle: chatSession.title });
+      }
     } catch (error) {
       console.error("Error loading chat data:", error);
       this.setState({
@@ -262,6 +294,10 @@ export class Chat extends Component<ChatProps, ChatState> {
     }
   };
 
+  handleTitleChange = (newTitle: string) => {
+    this.setState({ chatTitle: newTitle });
+  };
+
   formatTimestamp = (timestamp: any) => {
     if (!timestamp) return '';
 
@@ -277,7 +313,8 @@ export class Chat extends Component<ChatProps, ChatState> {
       error,
       characterName,
       characterAvatar,
-      userName
+      userName,
+      chatTitle
     } = this.state;
 
     return (
@@ -292,19 +329,29 @@ export class Chat extends Component<ChatProps, ChatState> {
             >
               ← Back
             </button>
-            <div className="chat-character-info">
-              {characterAvatar ? (
-                <img
-                  src={characterAvatar}
-                  alt={characterName}
-                  className="chat-character-avatar"
+            <div className="chat-meta">
+              <div className="chat-character-info">
+                {characterAvatar ? (
+                  <img
+                    src={characterAvatar}
+                    alt={characterName}
+                    className="chat-character-avatar"
+                  />
+                ) : (
+                  <div className="chat-character-avatar-placeholder">
+                    {characterName.charAt(0)}
+                  </div>
+                )}
+                <h1 className="chat-character-name">{characterName}</h1>
+              </div>
+              
+              {/* Chat title editor component */}
+              <div className="chat-title-wrapper">
+                <ChatTitleEditor 
+                  chatId={this.props.chatId} 
+                  initialTitle={chatTitle}
                 />
-              ) : (
-                <div className="chat-character-avatar-placeholder">
-                  {characterName.charAt(0)}
-                </div>
-              )}
-              <h1 className="chat-character-name">{characterName}</h1>
+              </div>
             </div>
           </div>
 

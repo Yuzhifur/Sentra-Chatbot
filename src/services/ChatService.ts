@@ -33,6 +33,7 @@ export interface ChatData {
   userId: string;
   userUsername: string;
   history: string;
+  title?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -101,6 +102,9 @@ export class ChatService {
       // Create empty chat history
       const emptyHistory: ChatHistory = { messages: [] };
 
+      // Create default title
+      const defaultTitle = `Chat with ${characterData.name}`;
+
       // Create chat document
       const chatData: ChatData = {
         characterId: characterId,
@@ -108,6 +112,7 @@ export class ChatService {
         userId: currentUser.uid,
         userUsername: userData.username || userData.displayName || 'User',
         history: JSON.stringify(emptyHistory),
+        title: defaultTitle,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
@@ -117,7 +122,7 @@ export class ChatService {
       // Add chat reference to user's chat history
       const userChatHistoryRef = doc(collection(db, "users", currentUser.uid, "chatHistory"), chatId);
       await setDoc(userChatHistoryRef, {
-        title: `Chat with ${characterData.name}`,
+        title: defaultTitle,
         characterId: characterId,
         characterName: characterData.name,
         createdAt: Timestamp.now(),
@@ -217,6 +222,45 @@ export class ChatService {
       return userMessage;
     } catch (error) {
       console.error("Error sending message:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update chat title
+   */
+  static async updateChatTitle(chatId: string, newTitle: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to update chat title');
+      }
+
+      // Trim and validate title
+      const trimmedTitle = newTitle.trim();
+      if (!trimmedTitle) {
+        throw new Error('Chat title cannot be empty');
+      }
+
+      const db = getFirestore();
+
+      // Update main chat document
+      const chatRef = doc(db, "chats", chatId);
+      await updateDoc(chatRef, {
+        title: trimmedTitle,
+        updatedAt: Timestamp.now()
+      });
+
+      // Update title in user's chat history
+      const userChatHistoryRef = doc(db, "users", currentUser.uid, "chatHistory", chatId);
+      await updateDoc(userChatHistoryRef, {
+        title: trimmedTitle,
+        lastUpdated: Timestamp.now()
+      });
+    } catch (error) {
+      console.error("Error updating chat title:", error);
       throw error;
     }
   }

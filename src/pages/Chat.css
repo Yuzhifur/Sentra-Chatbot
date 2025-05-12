@@ -36,7 +36,20 @@
   background-color: #d1d5db;
 }
 
+.chat-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
 .chat-character-info {
+  display: flex;
+  align-items: center;
+}
+
+.chat-title-wrapper {
+  margin-top: 0.5rem;
   display: flex;
   align-items: center;
 }

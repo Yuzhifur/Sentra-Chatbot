@@ -77,6 +77,20 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
     }
   });
 
+  // Function to get display title
+  const getDisplayTitle = (chat: RecentChat) => {
+    // Use custom title if available
+    if (chat.title) {
+      return chat.title;
+    }
+    // Fallback to "Chat with {characterName}"
+    if (chat.characterName) {
+      return `Chat with ${chat.characterName}`;
+    }
+    // Last resort
+    return "Chat";
+  };
+
   return (
     <div className="sidebar">
       <div className="sidebar-top">
@@ -129,7 +143,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                           (chat.characterName?.[0] || 'C').toUpperCase()
                         )}
                       </div>
-                      <span>{chat.title || chat.characterName || 'Chat'}</span>
+                      <div className="chat-item-content">
+                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -151,7 +167,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                           (chat.characterName?.[0] || 'C').toUpperCase()
                         )}
                       </div>
-                      <span>{chat.title || chat.characterName || 'Chat'}</span>
+                      <div className="chat-item-content">
+                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -173,7 +191,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                           (chat.characterName?.[0] || 'C').toUpperCase()
                         )}
                       </div>
-                      <span>{chat.title || chat.characterName || 'Chat'}</span>
+                      <div className="chat-item-content">
+                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
