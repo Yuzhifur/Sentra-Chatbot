@@ -77,12 +77,12 @@ export class ChatService {
       // If you want to always create a new chat, comment out this section
       /*
       const chatHistoryRef = collection(db, "users", currentUser.uid, "chatHistory");
-      const q = query(chatHistoryRef, 
+      const q = query(chatHistoryRef,
         where("characterId", "==", characterId),
         orderBy("lastUpdated", "desc"),
         limit(1)
       );
-      
+
       const existingChats = await getDocs(q);
       if (!existingChats.empty) {
         // Return the most recent chat with this character if it exists
@@ -384,4 +384,3 @@ export class ChatService {
     }
   }
 }
-

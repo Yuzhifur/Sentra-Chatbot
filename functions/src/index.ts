@@ -1,11 +1,15 @@
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from "firebase-admin";
 import * as dotenv from "dotenv";
 import Anthropic from "@anthropic-ai/sdk";
+import { defineSecret } from 'firebase-functions/params';
+import { getFirestore } from 'firebase-admin/firestore';
 
+const claudeApiKey = defineSecret('CLAUDE_API_KEY');
 
 // Initialize Firebase Admin
 admin.initializeApp();
+const db = getFirestore();
 
 // Load environment variables
 dotenv.config();
@@ -36,65 +40,63 @@ interface Character {
   scenario: string;
 }
 
-// Process chat messages with Claude API
-export const processChat = functions.https.onCall(async (data, context) => {
+// Create your function with secrets
+export const processChat = onCall({
+  secrets: [claudeApiKey],
+  // Other function settings (adjust as needed)
+  maxInstances: 10,
+  timeoutSeconds: 60,
+}, async (request) => {
   try {
     // Verify authentication
-    if (!data.auth) {
-      throw new functions.https.HttpsError(
-          "unauthenticated",
-          "User must be logged in to use this feature"
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "User must be logged in to use this feature"
       );
     }
 
+    const data = request.data;
+
     if (!data) {
-      throw new functions.https.HttpsError(
-          "invalid-argument",
-          "Data不存在"
-      )
+      throw new HttpsError(
+        "invalid-argument",
+        "Data不存在"
+      );
     }
 
-    if (!data.data) {
-      throw new functions.https.HttpsError(
-          "invalid-argument",
-          "data.data不存在"
-      )
+    if (!data.messages) {
+      throw new HttpsError(
+        "invalid-argument",
+        "data.messages不存在"
+      );
     }
 
-
-    if (!data.data.messages) {
-      throw new functions.https.HttpsError(
-          "invalid-argument",
-          "data.data.messages不存在"
-      )
+    if (!data.characterId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "data.characterId不存在"
+      );
     }
 
-    if (!data.data.characterId) {
-      throw new functions.https.HttpsError(
-          "invalid-argument",
-          "data.data.characterId不存在"
-      )
+    if (!data.sessionId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "data.sessionId不存在"
+      );
     }
 
-    if (!data.data.sessionId) {
-      throw new functions.https.HttpsError(
-          "invalid-argument",
-          "data.data.sessionId不存在"
-      )
-    }
-
-    // const userId = data.auth.uid;
-    const { messages, characterId, sessionId } = data.data;
+    // const userId = request.auth.uid;
+    const { messages, characterId, sessionId } = data;
     console.log(sessionId);
 
     // Get character data
-    const db = admin.firestore();
     const characterDoc = await db.collection("characters").doc(characterId).get();
 
     if (!characterDoc.exists) {
-      throw new functions.https.HttpsError(
-          "not-found",
-          "Character not found"
+      throw new HttpsError(
+        "not-found",
+        "Character not found"
       );
     }
 
@@ -109,8 +111,10 @@ export const processChat = functions.https.onCall(async (data, context) => {
     // Format previous conversation for context
     const conversationHistory = formatConversationHistory(messages.slice(0, -1));
 
+    const apiKey = claudeApiKey.value();
+
     // Call Claude API
-    const aiResponse = await callClaudeAPI(systemPrompt, conversationHistory, userMessage.content);
+    const aiResponse = await callClaudeAPI(apiKey, systemPrompt, conversationHistory, userMessage.content);
 
     // Create response message with timestamp
     const responseMessage = {
@@ -121,8 +125,8 @@ export const processChat = functions.https.onCall(async (data, context) => {
     // Update chat in Firestore
     // const chatRef = db.collection("chats").doc(sessionId);
     // await chatRef.update({
-    //   messages: admin.firestore.FieldValue.arrayUnion(responseMessage),
-    //   updatedAt: admin.firestore.Timestamp.now()
+    //   messages: FieldValue.arrayUnion(responseMessage),
+    //   updatedAt: Timestamp.now()
     // });
     //
     // // Update lastUpdated in user's chatHistory
@@ -137,7 +141,7 @@ export const processChat = functions.https.onCall(async (data, context) => {
     // if (!chatHistoryQuery.empty) {
     //   const chatHistoryRef = chatHistoryQuery.docs[0].ref;
     //   await chatHistoryRef.update({
-    //     lastUpdated: admin.firestore.Timestamp.now()
+    //     lastUpdated: Timestamp.now()
     //   });
     // }
 
@@ -148,13 +152,13 @@ export const processChat = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error("Error processing chat:", error);
 
-    if (error instanceof functions.https.HttpsError) {
+    if (error instanceof HttpsError) {
       throw error;
     }
 
-    throw new functions.https.HttpsError(
-        "internal",
-        error instanceof Error ? error.message : "Unknown error"
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error"
     );
   }
 });
@@ -211,10 +215,8 @@ function formatConversationHistory(messages: Message[]): string {
 }
 
 // Call Claude API to get response
-async function callClaudeAPI(systemPrompt: string, conversationHistory: string, userMessage: string): Promise<string> {
+async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationHistory: string, userMessage: string): Promise<string> {
   try {
-    const apiKey = process.env.CLAUDE_API_KEY;
-
     if (!apiKey) {
       throw new Error("Claude API key not configured");
     }
@@ -224,11 +226,11 @@ async function callClaudeAPI(systemPrompt: string, conversationHistory: string, 
 
     const anthropic = new Anthropic({
       apiKey: apiKey
-    })
+    });
 
     // Call Claude API
     const response = await anthropic.messages.create({
-      model: "claude-3-7-sonnet-20250219", // Choose an appropriate model
+      model: "claude-3-7-sonnet-20250219",
       max_tokens: 1000,
       temperature: 0.7,
       system: systemPrompt,
@@ -247,20 +249,15 @@ async function callClaudeAPI(systemPrompt: string, conversationHistory: string, 
 
     // Return Claude's response
     if (response.content && response.content.length > 0) {
-      // Get the first content block
       const contentBlock = response.content[0];
 
-      // Check if it's a text block
       if (contentBlock.type === 'text') {
         return contentBlock.text;
       }
     }
-    // Fallback if we couldn't get text
-    throw new Error("未曾预料的claude回复格式");
+    throw new Error("Unexpected Claude response format");
   } catch (error) {
     console.error("Error calling Claude API:", error);
-
-    // Return graceful fallback response if API call fails
     return "I seem to be having trouble with my thoughts right now. Could you please repeat that?";
   }
 }
