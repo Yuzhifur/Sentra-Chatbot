@@ -346,3 +346,4 @@ If you're not part of the Sentra team but want to use this codebase, additional 
    ```
 
 6. Follow the steps for Sentra team members from steps 2-10 above.
+   - Additionally, modify `const firebaseConfig = {}` and the client key in `provider: new ReCaptchaV3Provider()` in `index.tsx` with your own firebase project configs.
