@@ -1,20 +1,93 @@
+// src/pages/Chat.test.js
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { Chat } from './Chat';
+import { BrowserRouter } from 'react-router-dom';
 
-// Chat.test.js
-// This is the simplest test, testing for the functionallity of Jest construction
+// Mock the Firebase services used in Chat component
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(),
+  doc: jest.fn(),
+  getDoc: jest.fn(),
+  collection: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  getDocs: jest.fn(),
+  updateDoc: jest.fn(),
+}));
 
-describe('Chat Component Basic Tests', () => {
-    // 最简单的测试用例，不涉及组件渲染
-    test('should pass a simple test', () => {
-        expect(true).toBe(true);
-    });
+jest.mock('firebase/auth', () => ({
+  getAuth: jest.fn(() => ({
+    currentUser: {
+      uid: 'test-user-id',
+      displayName: 'Test User'
+    }
+  }))
+}));
 
-    // 一个简单的数学运算测试
-    test('should correctly add numbers', () => {
-        expect(1 + 1).toBe(2);
-    });
+jest.mock('../services/ChatService', () => ({
+  ChatService: {
+    getChatMessages: jest.fn().mockResolvedValue([]),
+    getChatSession: jest.fn().mockResolvedValue({
+      characterId: 'test-character-id',
+      history: JSON.stringify({ messages: [] })
+    }),
+    sendMessage: jest.fn().mockResolvedValue({
+      role: 'user',
+      content: 'Hello',
+      timestamp: new Date()
+    }),
+    generateResponse: jest.fn().mockResolvedValue({
+      role: 'assistant',
+      content: 'Hello there!',
+      timestamp: new Date()
+    })
+  }
+}));
 
-    // 一个简单的字符串测试
-    test('should correctly handle strings', () => {
-        expect('chat').toEqual('chat');
-    });
+jest.mock('../services/CharacterService', () => ({
+  CharacterService: {
+    getCharacter: jest.fn().mockResolvedValue({
+      name: 'Test Character',
+      characterDescription: 'This is a test character',
+      avatar: ''
+    })
+  }
+}));
+
+describe('Chat Component Tests', () => {
+  // Basic rendering test
+  test('renders chat interface correctly', async () => {
+    render(
+      <BrowserRouter>
+        <Chat 
+          chatId="test-chat-id" 
+          characterId="test-character-id" 
+          return={() => {}} 
+        />
+      </BrowserRouter>
+    );
+    
+    // Check if the back button is rendered
+    expect(await screen.findByText('← Back')).toBeInTheDocument();
+    
+    // Check if the character name appears after loading
+    expect(await screen.findByText('Test Character')).toBeInTheDocument();
+    
+    // Check if the empty state message is shown
+    expect(await screen.findByText(/Start a conversation with Test Character!/)).toBeInTheDocument();
+    
+    // Check if the input placeholder is correct
+    expect(await screen.findByPlaceholderText(/Message Test Character.../)).toBeInTheDocument();
+    
+    // Check if the send button is present
+    expect(await screen.findByText('Send')).toBeInTheDocument();
+  });
+
+  // More comprehensive tests can be added:
+  // - Test message sending functionality
+  // - Test loading states
+  // - Test error handling
+  // - Test message display
 });
