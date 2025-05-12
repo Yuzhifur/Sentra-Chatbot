@@ -1,7 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import axios from "axios";
 import * as dotenv from "dotenv";
+import Anthropic from "@anthropic-ai/sdk";
+
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -39,23 +40,52 @@ interface Character {
 export const processChat = functions.https.onCall(async (data, context) => {
   try {
     // Verify authentication
-    if (!context.auth) {
+    if (!data.auth) {
       throw new functions.https.HttpsError(
-        "unauthenticated",
-        "User must be logged in to use this feature"
+          "unauthenticated",
+          "User must be logged in to use this feature"
       );
     }
 
-    // Validate input
-    if (!data || !data.messages || !data.characterId || !data.sessionId) {
+    if (!data) {
       throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Missing required data"
-      );
+          "invalid-argument",
+          "Data不存在"
+      )
     }
 
-    const userId = context.auth.uid;
-    const { messages, characterId, sessionId } = data;
+    if (!data.data) {
+      throw new functions.https.HttpsError(
+          "invalid-argument",
+          "data.data不存在"
+      )
+    }
+
+
+    if (!data.data.messages) {
+      throw new functions.https.HttpsError(
+          "invalid-argument",
+          "data.data.messages不存在"
+      )
+    }
+
+    if (!data.data.characterId) {
+      throw new functions.https.HttpsError(
+          "invalid-argument",
+          "data.data.characterId不存在"
+      )
+    }
+
+    if (!data.data.sessionId) {
+      throw new functions.https.HttpsError(
+          "invalid-argument",
+          "data.data.sessionId不存在"
+      )
+    }
+
+    // const userId = data.auth.uid;
+    const { messages, characterId, sessionId } = data.data;
+    console.log(sessionId);
 
     // Get character data
     const db = admin.firestore();
@@ -63,8 +93,8 @@ export const processChat = functions.https.onCall(async (data, context) => {
 
     if (!characterDoc.exists) {
       throw new functions.https.HttpsError(
-        "not-found",
-        "Character not found"
+          "not-found",
+          "Character not found"
       );
     }
 
@@ -86,31 +116,30 @@ export const processChat = functions.https.onCall(async (data, context) => {
     const responseMessage = {
       role: "assistant",
       content: aiResponse,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
     };
 
     // Update chat in Firestore
-    const chatRef = db.collection("chats").doc(sessionId);
-    await chatRef.update({
-      messages: admin.firestore.FieldValue.arrayUnion(responseMessage),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Update lastUpdated in user's chatHistory
-    const chatHistoryQuery = await db
-      .collection("users")
-      .doc(userId)
-      .collection("chatHistory")
-      .where("chatId", "==", sessionId)
-      .limit(1)
-      .get();
-
-    if (!chatHistoryQuery.empty) {
-      const chatHistoryRef = chatHistoryQuery.docs[0].ref;
-      await chatHistoryRef.update({
-        lastUpdated: admin.firestore.FieldValue.serverTimestamp()
-      });
-    }
+    // const chatRef = db.collection("chats").doc(sessionId);
+    // await chatRef.update({
+    //   messages: admin.firestore.FieldValue.arrayUnion(responseMessage),
+    //   updatedAt: admin.firestore.Timestamp.now()
+    // });
+    //
+    // // Update lastUpdated in user's chatHistory
+    // const chatHistoryQuery = await db
+    //   .collection("users")
+    //   .doc(userId)
+    //   .collection("chatHistory")
+    //   .where("chatId", "==", sessionId)
+    //   .limit(1)
+    //   .get();
+    //
+    // if (!chatHistoryQuery.empty) {
+    //   const chatHistoryRef = chatHistoryQuery.docs[0].ref;
+    //   await chatHistoryRef.update({
+    //     lastUpdated: admin.firestore.Timestamp.now()
+    //   });
+    // }
 
     return {
       success: true,
@@ -124,8 +153,8 @@ export const processChat = functions.https.onCall(async (data, context) => {
     }
 
     throw new functions.https.HttpsError(
-      "internal",
-      error instanceof Error ? error.message : "Unknown error"
+        "internal",
+        error instanceof Error ? error.message : "Unknown error"
     );
   }
 });
@@ -193,26 +222,41 @@ async function callClaudeAPI(systemPrompt: string, conversationHistory: string, 
     // Prepare prompt for Claude
     const prompt = `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage}\n\nAssistant:`;
 
+    const anthropic = new Anthropic({
+      apiKey: apiKey
+    })
+
     // Call Claude API
-    const response = await axios.post(
-      "https://api.anthropic.com/v1/complete",
-      {
-        prompt: prompt,
-        model: "claude-2.1",
-        max_tokens_to_sample: 1000,
-        temperature: 0.7,
-        stop_sequences: ["\n\nHuman:"]
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey
+    const response = await anthropic.messages.create({
+      model: "claude-3-7-sonnet-20250219", // Choose an appropriate model
+      max_tokens: 1000,
+      temperature: 0.7,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt
+            }
+          ]
         }
-      }
-    );
+      ]
+    });
 
     // Return Claude's response
-    return response.data.completion.trim();
+    if (response.content && response.content.length > 0) {
+      // Get the first content block
+      const contentBlock = response.content[0];
+
+      // Check if it's a text block
+      if (contentBlock.type === 'text') {
+        return contentBlock.text;
+      }
+    }
+    // Fallback if we couldn't get text
+    throw new Error("未曾预料的claude回复格式");
   } catch (error) {
     console.error("Error calling Claude API:", error);
 
