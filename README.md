@@ -177,7 +177,7 @@ Firestore Database
 
 ---
 
-## Developers use the following workflow:
+## Typical developer workflow:
 
 - Find an empty directory
 ```bash
@@ -233,55 +233,116 @@ Firestore Database
 
 ---
 
-## Setup Firebase (you only need to do this once):
-Make sure you have Firebase account ready, and have node version 22.
+## 🛠️ Complete Build and Test Instructions
 
-1. Install dependencies:
+### Prerequisites
+- Node.js v22 or later
+- Firebase CLI installed globally (`npm install -g firebase-tools`)
+- Git
+- Google Cloud CLI (gcloud) for non-Sentra developers
+
+### For Sentra Team Members
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Yuzhifur/Sentra-Chatbot.git
+   cd Sentra-Chatbot
+   ```
+
+2. Install main project dependencies:
    ```bash
    npm install
    ```
 
-2. Install firebase CLI:
+3. Install Firebase Functions dependencies:
    ```bash
-   npm install -g firebase-tools
+   cd functions
+   npm install
+   cd ..
    ```
 
-3. Login into firebase
-   ```bash
-   firebase login
+4. Create a `.env.local` file in the project root with Firebase config:
+   ```
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
    ```
 
-4. Initialize firebase configurations
-   - Make sure only one person in team runs this and push changes, other members pull from repo
-   ```bash
-   firebase init
-   ```
-
-5. Create a `.env.local` file in the project root:
-   - Fill in your Firebase project credentials as NEXT_PUBLIC_FIREBASE_API_KEY
-   - This can be found in project settings in Firebase console
-
----
-
-## Full Build Instruction:
-
-1. Start the development server:
+5. Start the development server:
    ```bash
    npm start
    ```
 
-2. Build for production:
+6. Running tests:
+   ```bash
+   npm test
+   ```
+
+7. Emulate and test locally:
+   ```bash
+   firebase emulators:start --only hosting,auth,firestore,functions,storage
+   ```
+
+8. Build for production:
    ```bash
    npm run build
    ```
 
-3. Emulate and test:
-   ```bash
-   firebase emulators:start --only hosting,auth,firestore,functions,storage
-   ```
-   Open the emulated hosting in private browsing (with empty browser cache).
+9. Deploy to Firebase:
+    ```bash
+    firebase deploy
+    ```
 
-4. Deploy to Firebase:
+### For Non-Sentra Developers
+
+If you're not part of the Sentra team but want to use this codebase, additional setup is required:
+
+1. Create your own Firebase project at [Firebase Console](https://console.firebase.google.com/)
+
+2. Initialize Firebase services:
+   - Authentication
+   - Firestore
+   - Storage
+   - Functions
+   - App Check
+
+3. Set up Google Cloud environment:
+   - Install Google Cloud CLI (gcloud)
+   - Login to your Google Cloud account:
+     ```bash
+     gcloud auth login
+     ```
+   - Set your project:
+     ```bash
+     gcloud config set project <your-project-id>
+     ```
+   - Create App Engine application if you don't have a service account with email `serviceAccount:<project_id>@appspot.gserviceaccount.com`:
+     ```bash
+     gcloud app create --region=us-central --project=<your-project-id>
+     ```
+
+4. Create and set up secret for Claude API:
+   - Enable Secret Manager API:
+     ```bash
+     gcloud services enable secretmanager.googleapis.com
+     ```
+   - Create the secret:
+     ```bash
+     gcloud secrets create CLAUDE_API_KEY --replication-policy="automatic"
+     ```
+   - Add your Anthropic API key to the secret (replace $CLAUDE_API_KEY with your actual API key):
+     ```bash
+     echo $CLAUDE_API_KEY | gcloud secrets versions add CLAUDE_API_KEY --data-file=-
+     ```
+   - Grant access to the service account:
+     ```bash
+     gcloud secrets add-iam-policy-binding CLAUDE_API_KEY \
+       --member=serviceAccount:<your-project-id>@appspot.gserviceaccount.com \
+       --role=roles/secretmanager.secretAccessor
+     ```
+
+5. Initialize Firebase in your local project:
    ```bash
-   firebase deploy
+   firebase login
+   firebase init
    ```
+
+6. Follow the steps for Sentra team members from steps 2-10 above.
