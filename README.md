@@ -1,4 +1,4 @@
-# Sentra: Immersive AI Roleplay Chatbots V1.0.0
+# Sentra: Immersive AI Roleplay Chatbots V1.0.1
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
@@ -146,7 +146,7 @@ Firestore Database
 
 ---
 
-## 🧪 Current Available Use Cases (May 12, 2025, V1.0.0)
+## 🧪 Current Available Use Cases (May 13, 2025, V1.0.1)
 
 Sentra supports the following key features and workflows for users:
 
@@ -185,6 +185,19 @@ Sentra supports the following key features and workflows for users:
 - Each session supports:
   - Real-time message exchange
   - Character-specific memory
+
+### 7. 👤 User Profiles & Character Management
+
+- Users can view their own profile and profiles of other users.
+- Personalization options include:
+  - Uploading and displaying profile pictures
+  - Setting a custom display name
+  - Writing a personal bio
+- Character management capabilities:
+  - View characters created by any user in their profile
+  - Edit existing characters with all original data pre-populated
+  - Access character previews and initiate chats directly from profile pages
+- User-specific views ensure only character creators can edit their characters
 
 ---
 
