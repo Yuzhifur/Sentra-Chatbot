@@ -8,7 +8,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import ChatWrapper from './pages/Chat';
 import Home from './pages/Home';
 import Sidebar from './components/Sidebar';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import UserProfile from './pages/UserProfile';
 import CharacterCreationWrapper from './pages/CharacterCreation';
 import './App.css';
@@ -127,14 +127,17 @@ export class App extends Component<AppProps, AppState> {
           <Sidebar doResetDashboard={this.doResetDashboard} />
         </div>
         <div className="main-content">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/chat" element={<ChatWrapper />} />
-          <Route path="/chat/:characterId" element={<ChatWrapper />} />
-          <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
-          <Route path="/character-creation" element={<CharacterCreationWrapper />} />
-    </Routes>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="/chat" element={<ChatWrapper />} />
+            <Route path="/chat/:characterId" element={<ChatWrapper />} />
+            <Route path="/chat/:characterId/:sessionId" element={<ChatWrapper />} />
+            <Route path="/character-creation" element={<CharacterCreationWrapper />} />
+            <Route path="/character-edit/:characterId" element={<CharacterCreationWrapper />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </div>
       </div>
     );

@@ -20,8 +20,7 @@ import {
   CollectionReference,
   Timestamp
 } from 'firebase/firestore';
-
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export interface UserData {
   username: string;
@@ -193,8 +192,8 @@ export class FirebaseService {
 
         if (characterDoc.exists()) {
           characters.push({
-            id: characterId,
-            ...characterDoc.data()
+            ...characterDoc.data(),
+            docId: characterId
           });
         }
       }
@@ -206,10 +205,30 @@ export class FirebaseService {
     }
   }
 
-  static async updateUserData(userID: string, updatedData: any): Promise<void> {
+  // Get a character by its ID
+  static async getCharacterById(characterId: string): Promise<any> {
     try {
       const db = getFirestore();
-      const userRef = doc(db, 'users', userID);
+      const characterDoc = await getDoc(doc(db, "characters", characterId));
+
+      if (characterDoc.exists()) {
+        return {
+          ...characterDoc.data(),
+          docId: characterId
+        };
+      }
+
+      throw new Error(`Character with ID ${characterId} not found`);
+    } catch (error) {
+      console.error("Error fetching character:", error);
+      throw error;
+    }
+  }
+
+  static async updateUserData(userId: string, updatedData: any): Promise<void> {
+    try {
+      const db = getFirestore();
+      const userRef = doc(db, 'users', userId);
       await setDoc(userRef, updatedData, { merge: true });
     } catch (error) {
       console.error("Error updating user data:", error);
@@ -217,17 +236,38 @@ export class FirebaseService {
     }
   }
 
-  // Profile Picture Upload
-  static async uploadProfilePicture(userId: string, file: File): Promise<any> {
-    const storage = getStorage();
-    const storageRef = ref(storage, `profilePictures/${userId}/${file.name}`);
+  // Profile Picture Upload - Combined method that uploads and returns the URL
+  static async uploadAndGetProfilePicture(userId: string, file: File): Promise<string> {
+    try {
+      const storage = getStorage();
+      // Use a more unique filename to avoid cache issues
+      const timestamp = new Date().getTime();
+      const fileName = `${timestamp}_${file.name}`;
+      const storagePath = `profilePictures/${userId}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
 
-    // Upload the file to Firebase Storage
-    await uploadBytes(storageRef, file); // Upload the file
-    return storageRef; // Return the reference to the uploaded file
+      // Upload the file to Firebase Storage
+      await uploadBytes(storageRef, file);
+
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      throw error;
+    }
   }
 
+  // Legacy method for compatibility
+  static async uploadProfilePicture(userId: string, file: File): Promise<any> {
+    const storage = getStorage();
+    const timestamp = new Date().getTime();
+    const fileName = `${timestamp}_${file.name}`;
+    const storageRef = ref(storage, `profilePictures/${userId}/${fileName}`);
 
-
-
+    // Upload the file to Firebase Storage
+    await uploadBytes(storageRef, file);
+    return storageRef;
+  }
 }
