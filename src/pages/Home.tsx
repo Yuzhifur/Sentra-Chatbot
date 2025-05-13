@@ -54,21 +54,10 @@ const Home: React.FC = () => {
   
         const characterPromises = data.docs.map(async (doc) => {
           const docData = doc.data();
-          let imageUrl = null;
-  
-          if (docData.imagePath) {
-            try {
-              const storageRef = ref(storage, docData.imagePath);
-              imageUrl = await getDownloadURL(storageRef);
-            } catch (err) {
-              console.warn(`Couldn't fetch image for ${docData.name}:`, err);
-            }
-          }
   
           return {
             ...docData,
             docId: doc.id,  // Store the document ID separately
-            imageUrl,
           };
         });
   
@@ -133,7 +122,7 @@ const Home: React.FC = () => {
               <div
                 className="character-image"
                 style={{
-                  backgroundImage: `url(${char.imageUrl || placeholderUrl || ""})`,
+                  backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
