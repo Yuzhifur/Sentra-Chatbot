@@ -51,16 +51,34 @@ const Home: React.FC = () => {
     const getCharacterList = async () => {
       try {
         const data = await getDocs(characterCollectionRef);
-        const filteredData = data.docs.map((doc) => ({
-          ...doc.data(),
-          docId: doc.id // Store the document ID separately
-        }));
-        setCharacterList(filteredData);
+  
+        const characterPromises = data.docs.map(async (doc) => {
+          const docData = doc.data();
+          let imageUrl = null;
+  
+          if (docData.imagePath) {
+            try {
+              const storageRef = ref(storage, docData.imagePath);
+              imageUrl = await getDownloadURL(storageRef);
+            } catch (err) {
+              console.warn(`Couldn't fetch image for ${docData.name}:`, err);
+            }
+          }
+  
+          return {
+            ...docData,
+            docId: doc.id,  // Store the document ID separately
+            imageUrl,
+          };
+        });
+  
+        const characterList = await Promise.all(characterPromises);
+        setCharacterList(characterList);
       } catch (err) {
         console.error(err);
       }
     };
-
+  
     getCharacterList();
   }, []);
 
