@@ -13,7 +13,7 @@
   "name": "sentra",
   "description": "A roleplay chatbot web application based on Firebase, React, and language model APIs.",
   "version": "0.1.0",
-  "main": "index.tsx",
+  "main": "src/index.tsx",
   "keywords": [],
   "author": "",
   "license": "ISC",
