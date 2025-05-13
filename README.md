@@ -144,7 +144,6 @@ Firestore Database
    - The `history` field in `chats/{chatId}` is updated
    - The `lastUpdated` field in `users/{userId}/chatHistory/{chatId}` is updated
 
-
 ---
 
 ## 🧪 Current Available Use Cases (May 12, 2025, V1.0.0)
@@ -177,9 +176,9 @@ Sentra supports the following key features and workflows for users:
 - Clicking an entry reopens the associated chat session.
 
 ### 5. 💬 Chat Creation and Access
-- Users can start a new chat from a character’s profile page.
+- Users can start a new chat from a character's profile page.
 - A modal popup allows choosing between starting a new chat or continuing an existing one.
-- Each chat session is recorded in both the `chats/` collection and the user’s `chatHistory/` subcollection.
+- Each chat session is recorded in both the `chats/` collection and the user's `chatHistory/` subcollection.
 
 ### 6. 🤖 Chatting with AI Characters
 - Users can engage in immersive conversations with AI-driven characters.
@@ -200,6 +199,193 @@ Sentra supports the following key features and workflows for users:
 - **Frontend**: React, Tailwind CSS
 - **Backend**: Firebase Authenticaltion, Functions, Firestore
 - **AI**: Language model API provided by OpenAI, Anthropic, Deepseek, etc.
+
+---
+
+## 🛠️ Building and Testing
+
+### Prerequisites
+- Node.js v22 or later
+- Firebase CLI installed globally (`npm install -g firebase-tools`)
+- Git
+- Google Cloud CLI (gcloud) for non-Sentra developers
+
+### Build Process
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Yuzhifur/Sentra-Chatbot.git
+   cd Sentra-Chatbot
+   ```
+
+2. Install main project dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Install Firebase Functions dependencies:
+   ```bash
+   cd functions
+   npm install
+   cd ..
+   ```
+
+4. Build the project:
+   ```bash
+   npm run build
+   ```
+
+### Testing
+Our project uses Jest for testing. To run the tests:
+
+1. Run all tests:
+   ```bash
+   npm test
+   ```
+
+2. Run specific test files:
+   ```bash
+   npm test -- src/services/FirebaseService.test.js
+   ```
+
+3. Key test files:
+   - `src/services/FirebaseService.test.js`: Tests for Firebase service functions
+   - `src/utils.test.js`: Tests for utility functions
+   - `src/pages/Chat.test.js`: Tests for Chat component functionality
+
+The tests validate core functionality including:
+- Authentication processes
+- Firebase service interactions
+- Component rendering
+- Utility functions
+
+### Continuous Integration
+We use GitHub Actions for CI. The workflow is defined in `.github/workflows/main.yml` and `.github/workflows/webpack.yml` and runs automatically on pushes to the main branch and pull requests. The CI process:
+1. Sets up Node.js environment
+2. Installs dependencies
+3. Runs all tests
+4. Builds the project
+
+You can view CI results in the "Actions" tab of our GitHub repository.
+
+---
+
+## 🖥️ Running the System
+
+### Local Development Setup
+1. Create a `.env.local` file in the project root with Firebase config:
+   ```
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   ```
+
+2. Start the development server:
+   ```bash
+   npm start
+   ```
+   This will launch the application at http://localhost:3000
+
+3. For full functionality with Firebase services, start the Firebase emulators:
+   ```bash
+   firebase emulators:start --only hosting,auth,firestore,functions,storage
+   ```
+   This will make the Firebase emulator UI available at http://localhost:4000
+
+### Using the Firebase Emulator
+To use the Firebase emulator:
+
+1. Make sure you've initialized your Firebase project:
+   ```bash
+   firebase init
+   ```
+
+2. Start all emulators:
+   ```bash
+   firebase emulators:start
+   ```
+
+3. The emulator provides local versions of:
+   - Hosting (serves your web app)
+   - Firestore (database)
+   - Auth (authentication)
+   - Functions (serverless functions)
+   - Storage (file storage)
+
+4. Access the emulator UI at http://localhost:4000 to view and manage your emulated Firebase services.
+
+### Currently Operational Features (Beta Release)
+In this beta release, the following core use cases are fully operational:
+
+1. **Authentication Flow**
+   - Users can register, login, and reset passwords
+   - Test it by: Creating a new account or logging in with existing credentials
+
+2. **Character Creation and Management**
+   - Users can create and view character profiles
+   - Test it by: Navigating to the Character Creation page after login
+
+3. **Basic Chat Functionality**
+   - Users can start a new chat with any character
+   - The AI responds appropriately based on character profile
+   - Test it by: Selecting any character and clicking "Let's Chat!"
+
+4. **Chat History**
+   - Previous conversations are saved and can be resumed
+   - Test it by: Starting a chat, adding messages, navigating away, and returning via the sidebar
+
+5. **Search Functionality**
+   - Users can search for characters by name
+   - Test it by: Using the search bar at the top of the home page
+
+### Known Limitations in Beta
+- Profile image uploading has limited file size support (max 5MB)
+- Character search only supports exact name matches
+- Chat history is limited to 50 messages per conversation
+- AI responses may occasionally time out due to API limitations
+
+---
+
+## 👥 Development Process
+
+### Version Control
+We use Git for version control with the following workflow:
+- Main branch contains stable releases
+- Developer branches for individual features
+- Pull requests with code reviews before merging to main
+
+### Bug Tracking
+We use GitHub Issues for bug tracking. To report a bug:
+1. Go to the [Issues tab](https://github.com/Yuzhifur/Sentra-Chatbot/issues)
+2. Click "New Issue"
+3. Select the "Bug Report" template
+4. Fill in the required information
+
+Current known issues are labeled in our issue tracker. High-priority bugs are labeled "P1".
+
+### Development Workflow
+When contributing to the project:
+
+1. Create a new branch for your feature:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit them with descriptive messages:
+   ```bash
+   git add .
+   git commit -m "Add feature: detailed description of changes"
+   ```
+
+3. Before pushing, make sure your branch is up to date with main:
+   ```bash
+   git pull --rebase origin main
+   ```
+
+4. Push your branch and create a pull request:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+5. Request a code review from at least one other team member
+6. Once approved, merge your pull request into main
 
 ---
 
