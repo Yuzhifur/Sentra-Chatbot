@@ -163,8 +163,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleResultClick = (result: SearchResult) => {
     if (result.type === 'user') {
-      // Later, this will navigate to the user's profile
-      console.log("Clicked on user:", result.displayName);
+      // Navigate to the user's profile
+      navigate(`/profile/${result.id}`);
     } else {
       // Show character popup
       setSelectedCharacter(result);
@@ -271,7 +271,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
               style={{
                 cursor: 'pointer',
                 fontSize: '15px',
-                marginLeft: '10px'
+                marginLeft: '10px',
+                display: 'inline-block',
+                marginTop: '15px',
+                padding: '8px 16px',
+                backgroundColor: '#4285f4',
+                color: 'white',
+                borderRadius: '20px'
               }}
             >
               Let's Chat! ✏️

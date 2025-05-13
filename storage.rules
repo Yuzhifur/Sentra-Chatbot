@@ -1,13 +1,23 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Base rule - deny by default
     match /{allPaths=**} {
-      allow read: if request.auth != null;
+      allow read: if true;  // Anyone can read
+      allow write: if false; // No default write access
+    }
+
+    // Allow authenticated users to upload profile pictures to their own folder
+    match /profilePictures/{userId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow authenticated users to upload character images to their own characters
+    match /characters/{characterId}/{fileName} {
       allow write: if request.auth != null;
+      // For more security, you could check if the user owns the character
+      // This would require a Firestore read to verify ownership
     }
   }
 }
