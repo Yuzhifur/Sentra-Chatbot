@@ -2,6 +2,8 @@
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
+🔗 Link to Sentra's Firebase Hosting: https://sentra-4114a.web.app/
+
 ---
 
 ## 🚀 Idea and Goals
