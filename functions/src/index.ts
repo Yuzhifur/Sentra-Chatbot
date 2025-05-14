@@ -221,6 +221,7 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationH
       throw new Error("Claude API key not configured");
     }
 
+
     // Prepare prompt for Claude
     const prompt = `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage}\n\nAssistant:`;
 

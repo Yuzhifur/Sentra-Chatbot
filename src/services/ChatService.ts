@@ -12,7 +12,8 @@ import {
   getDocs,
   Timestamp,
   DocumentData,
-  DocumentReference
+  DocumentReference,
+    deleteDoc
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions'
@@ -74,23 +75,6 @@ export class ChatService {
 
       const userData = userDoc.data();
 
-      // Check if there's an existing chat with this character
-      // If you want to always create a new chat, comment out this section
-      /*
-      const chatHistoryRef = collection(db, "users", currentUser.uid, "chatHistory");
-      const q = query(chatHistoryRef,
-        where("characterId", "==", characterId),
-        orderBy("lastUpdated", "desc"),
-        limit(1)
-      );
-
-      const existingChats = await getDocs(q);
-      if (!existingChats.empty) {
-        // Return the most recent chat with this character if it exists
-        return existingChats.docs[0].id;
-      }
-      */
-
       // Create a unique chat ID using timestamp and random number
       // Add a safeguard to help ensure uniqueness
       const timestamp = Date.now();
@@ -136,6 +120,27 @@ export class ChatService {
       throw error;
     }
   }
+
+  // Delete an existed chat session
+  static async deleteChatSession(chatId: string): Promise<void> {
+      const db = getFirestore();
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+      throw new Error("You must be logged in to delete chats");
+    }
+
+    // delete the file in chats directory
+    const chatRef = doc(db, 'chats', chatId);
+    await deleteDoc(chatRef);
+
+    // deletet the file in chatHistory under user directory
+    const historyRef = doc(db, 'users', currentUser.uid, 'chatHistory', chatId);
+    await deleteDoc(historyRef);
+  }
+
+
 
   /**
    * Get an existing chat session
@@ -353,6 +358,9 @@ export class ChatService {
       for (const docSnapshot of querySnapshot.docs) {
         // Check if characterId exists, if not, try to update it
         const data = docSnapshot.data();
+        const chatId = docSnapshot.id;
+
+
         if (!data.characterId && docSnapshot.id) {
           try {
             // Try to get the chat document to find the characterId
