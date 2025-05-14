@@ -81,6 +81,7 @@
 .chat-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 10px;
   border-radius: 10px;
   cursor: pointer;
@@ -91,6 +92,21 @@
 .chat-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
+
+
+.delete-button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.delete-button:hover {
+  color: #ff4d4f;
+}
+
 
 .avatar {
   width: 40px;

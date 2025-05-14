@@ -47,6 +47,19 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
     navigate('/chat');
   };
 
+  // Function to delete a existed chat
+  const handleDeleteChat = async (chatId: string) => {
+    if (!window.confirm('Are you sure you want to delete this chat?')) return;
+
+    try {
+      await ChatService.deleteChatSession(chatId);
+      setRecentChats(prev => prev.filter(chat => chat.id !== chatId));
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+      alert("Failed to delete chat.");
+    }
+  }
+
   // Group chats by date (today, yesterday, older)
   const todayChats: RecentChat[] = [];
   const yesterdayChats: RecentChat[] = [];
@@ -131,22 +144,24 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                 <div className="history-section">
                   <h3 className="section-header">Today</h3>
                   {todayChats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      className="chat-item"
-                      onClick={() => handleChatClick(chat.id, chat.characterId)}
-                    >
-                      <div className="avatar">
-                        {chat.avatar ? (
-                          <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
-                        ) : (
-                          (chat.characterName?.[0] || 'C').toUpperCase()
-                        )}
+                      <div key={chat.id} className="chat-item">
+                        <div
+                            onClick={() => handleChatClick(chat.id, chat.characterId)}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <div className="avatar">
+                            {chat.avatar ? (
+                                <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
+                            ) : (
+                                (chat.characterName?.[0] || 'C').toUpperCase()
+                            )}
+                          </div>
+                          <div className="chat-item-content">
+                            <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                          </div>
+                        </div>
+                        <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
                       </div>
-                      <div className="chat-item-content">
-                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
-                      </div>
-                    </div>
                   ))}
                 </div>
               )}
