@@ -1,36 +1,82 @@
 // src/utils.test.js
-// This is a simple test file that doesn't depend on React or complex imports
+// This file contains basic utility function tests
 
-// Function to test
-function sum(a, b) {
-    return a + b;
+// Simple utility function to test
+export function formatUsername(username) {
+    if (!username) return '';
+    return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
   }
   
-  // Test
-  test('adds 1 + 2 to equal 3', () => {
-    expect(sum(1, 2)).toBe(3);
-  });
+  // Get initials from a display name (e.g., "John Doe" -> "JD")
+  export function getInitials(name) {
+    if (!name) return '';
+    
+    return name
+      .split(' ')
+      .map(part => part.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 2); // Limit to 2 characters
+  }
   
-  test('adds negative numbers correctly', () => {
-    expect(sum(-1, -2)).toBe(-3);
-  });
+  // Function to safely parse JSON with fallback
+  export function safeJsonParse(jsonString, fallback = {}) {
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      return fallback;
+    }
+  }
   
-  // Simple string test
-  test('string concatenation works', () => {
-    expect('hello' + ' ' + 'world').toBe('hello world');
-  });
+  // Tests
+  describe('Utility Functions', () => {
+    // Test formatUsername function
+    describe('formatUsername', () => {
+      test('capitalizes first letter and lowercases the rest', () => {
+        expect(formatUsername('john')).toBe('John');
+        expect(formatUsername('JANE')).toBe('Jane');
+        expect(formatUsername('dOe')).toBe('Doe');
+      });
   
-  // Array test
-  test('array operations work', () => {
-    const arr = [1, 2, 3];
-    expect(arr.length).toBe(3);
-    expect(arr.map(x => x * 2)).toEqual([2, 4, 6]);
-  });
+      test('handles empty inputs', () => {
+        expect(formatUsername('')).toBe('');
+        expect(formatUsername(null)).toBe('');
+        expect(formatUsername(undefined)).toBe('');
+      });
+    });
   
-  // Object test
-  test('object operations work', () => {
-    const obj = { name: 'Sentra', type: 'chatbot' };
-    expect(obj.name).toBe('Sentra');
-    expect(obj.type).toBe('chatbot');
-    expect(Object.keys(obj)).toEqual(['name', 'type']);
+    // Test getInitials function
+    describe('getInitials', () => {
+      test('returns initials from a full name', () => {
+        expect(getInitials('John Doe')).toBe('JD');
+        expect(getInitials('Jane Smith')).toBe('JS');
+      });
+  
+      test('handles single names', () => {
+        expect(getInitials('John')).toBe('J');
+      });
+  
+      test('handles empty inputs', () => {
+        expect(getInitials('')).toBe('');
+        expect(getInitials(null)).toBe('');
+        expect(getInitials(undefined)).toBe('');
+      });
+      
+      test('limits to two characters for long names', () => {
+        expect(getInitials('John Jacob Smith')).toBe('JJ');
+      });
+    });
+  
+    // Test safeJsonParse function
+    describe('safeJsonParse', () => {
+      test('parses valid JSON', () => {
+        expect(safeJsonParse('{"name":"John","age":30}')).toEqual({name: 'John', age: 30});
+        expect(safeJsonParse('["a", "b", "c"]')).toEqual(['a', 'b', 'c']);
+      });
+  
+      test('returns fallback for invalid JSON', () => {
+        expect(safeJsonParse('invalid json')).toEqual({});
+        expect(safeJsonParse('invalid json', [])).toEqual([]);
+      });
+    });
   });

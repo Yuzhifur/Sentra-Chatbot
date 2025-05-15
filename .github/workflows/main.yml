@@ -1,4 +1,4 @@
-name: CI
+name: Sentra CI
 
 on:
   push:
@@ -7,14 +7,24 @@ on:
     branches: [ main ]
 
 jobs:
-  verify:
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: 18
           cache: 'npm'
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test -- --watchAll=false
+
+      - name: Build
+        run: npm run build
