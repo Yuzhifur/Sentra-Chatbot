@@ -18,7 +18,8 @@ import {
   getDocs,
   serverTimestamp,
   CollectionReference,
-  Timestamp
+  Timestamp,
+  deleteDoc
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -232,6 +233,36 @@ export class FirebaseService {
       await setDoc(userRef, updatedData, { merge: true });
     } catch (error) {
       console.error("Error updating user data:", error);
+      throw error;
+    }
+  }
+
+  static async deleteCharacter(userId: string, characterId: string): Promise<void> {
+    console.log("userId: " + userId + " characterId: " + characterId) 
+    try {
+      const db = getFirestore();
+
+      // 1. Delete the character document from Firestore
+      await deleteDoc(doc(db, 'characters', characterId));
+
+      // 2. Remove the characterId from user's userCharacters array
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const currentList = Array.isArray(userData.userCharacters)
+          ? userData.userCharacters
+          : [];
+
+        const updatedCharacterList = currentList.filter((id: string) => id !== characterId);
+
+        await updateDoc(userRef, {
+          userCharacters: updatedCharacterList
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting character:", error);
       throw error;
     }
   }
