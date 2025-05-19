@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
 import './UserProfile.css';
 import CharacterChatPopup from '../components/CharacterChatPopup';
+import { collection, getFirestore } from 'firebase/firestore';
 
 type UserData = {
   username: string;
@@ -177,6 +178,30 @@ const UserProfile: React.FC = () => {
     navigate(`/character-edit/${characterId}`);
   };
 
+  const handleDeleteCharacter = async (characterId: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this character?");
+    if (!confirmed) return;
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to delete a character');
+      }
+
+      // Delete from Firestore
+      await FirebaseService.deleteCharacter(currentUser.uid, characterId);
+
+      // Update UI by removing the deleted character from local state
+      setCharacters(prev =>
+        prev.filter(character => character.docId !== characterId)
+      );
+    } catch (error: any) {
+      console.error('Error deleting character:', error);
+      alert(error.message || 'Failed to delete character. Please try again.');
+    }
+  };
+
   const handleStartChat = (characterId: string, characterName: string) => {
     setCharacterForChat({ id: characterId, name: characterName });
     setShowChatPopup(true);
@@ -285,16 +310,32 @@ const UserProfile: React.FC = () => {
                       <div className="character-item-name">{character.name}</div>
                     </div>
                     {isOwnProfile && (
-                      <button
-                        className="character-item-edit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditCharacter(character.docId);
-                        }}
-                        title="Edit character"
-                      >
-                        ✏️
-                      </button>
+                      <div>
+                        <span>
+                            <button
+                            className="character-item-edit"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditCharacter(character.docId);
+                            }}
+                            title="Edit character"
+                          >
+                            ✏️
+                          </button>
+                        </span>
+                        <span>
+                          <button
+                            className="character-item-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCharacter(character.docId);
+                            }}
+                            title="Delete character"
+                          >
+                            ❌
+                          </button>
+                        </span>
+                      </div>
                     )}
                   </div>
                 ))

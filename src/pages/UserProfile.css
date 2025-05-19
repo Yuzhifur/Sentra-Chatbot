@@ -189,10 +189,33 @@
   text-overflow: ellipsis;
 }
 
-.character-item-edit {
+.character-item-delete {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.character-item:hover .character-item-delete {
+  opacity: 1;
+}
+
+.character-item-edit {
+  position: absolute;
+  top: 0.5rem;
+  right: 3rem;
   background-color: white;
   border: none;
   border-radius: 50%;
