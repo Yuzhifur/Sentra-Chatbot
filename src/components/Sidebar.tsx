@@ -114,16 +114,6 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
           >
             Sentra
           </h1>
-          <span
-            className="chat-item"
-            onClick={handleNewChat}
-            title="Create new Chat"
-            style={{
-              cursor: 'pointer',
-              fontSize: '20px',
-              marginLeft: '10px'
-            }}
-            >✏️</span>
         </div>
 
         <div className="search-container">
