@@ -158,6 +158,8 @@ type ChatState = {
   characterAvatar: string;
   userName: string;
   chatTitle: string;
+  editingMessageIndex: number | null; // Track which message is being edited
+  editingContent: string; // Content being edited
 };
 
 export class Chat extends Component<ChatProps, ChatState> {
@@ -174,7 +176,9 @@ export class Chat extends Component<ChatProps, ChatState> {
       characterDescription: '',
       characterAvatar: '',
       userName: 'User',
-      chatTitle: props.initialChatTitle || 'Chat'
+      chatTitle: props.initialChatTitle || 'Chat',
+      editingMessageIndex: null,
+      editingContent: '',
     };
     this.messagesEndRef = React.createRef();
   }
@@ -260,6 +264,10 @@ export class Chat extends Component<ChatProps, ChatState> {
     this.setState({ input: e.target.value });
   };
 
+  handleEditingContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    this.setState({ editingContent: e.target.value });
+  };
+
   handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -294,6 +302,61 @@ export class Chat extends Component<ChatProps, ChatState> {
     }
   };
 
+  handleStartEdit = (messageIndex: number, currentContent: string) => {
+    this.setState({
+      editingMessageIndex: messageIndex,
+      editingContent: currentContent
+    });
+  };
+
+  handleCancelEdit = () => {
+    this.setState({
+      editingMessageIndex: null,
+      editingContent: ''
+    });
+  };
+
+  handleConfirmEdit = async () => {
+    const { editingMessageIndex, editingContent, messages } = this.state;
+    
+    if (editingMessageIndex === null || !editingContent.trim()) {
+      return;
+    }
+
+    this.setState({ isLoading: true });
+
+    try {
+      // Rewind the chat history to the edited message point
+      await ChatService.rewindToMessage(
+        this.props.chatId, 
+        editingMessageIndex, 
+        editingContent.trim()
+      );
+
+      // Clear editing state
+      this.setState({
+        editingMessageIndex: null,
+        editingContent: ''
+      });
+
+      // Reload messages to get the updated chat
+      await this.loadChatData();
+
+      // Generate AI response to the modified message
+      await ChatService.generateResponse(this.props.chatId);
+
+      // Reload messages again to get the AI response
+      await this.loadChatData();
+    } catch (error) {
+      console.error("Error editing message:", error);
+      this.setState({
+        error: error instanceof Error ? error.message : 'Error editing message'
+      });
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  };
+
   handleTitleChange = (newTitle: string) => {
     this.setState({ chatTitle: newTitle });
   };
@@ -314,7 +377,9 @@ export class Chat extends Component<ChatProps, ChatState> {
       characterName,
       characterAvatar,
       userName,
-      chatTitle
+      chatTitle,
+      editingMessageIndex,
+      editingContent
     } = this.state;
 
     return (
@@ -377,10 +442,52 @@ export class Chat extends Component<ChatProps, ChatState> {
                         {this.formatTimestamp(message.timestamp)}
                       </span>
                     )}
+                    {/* Edit button for user messages */}
+                    {message.role === 'user' && editingMessageIndex !== index && (
+                      <button
+                        className="chat-message-edit-button"
+                        onClick={() => this.handleStartEdit(index, message.content)}
+                        title="Edit this message"
+                        disabled={isLoading}
+                      >
+                        ✏️
+                      </button>
+                    )}
                   </div>
-                  <div className="chat-message-content">
-                    {message.content}
-                  </div>
+                  
+                  {/* Show message content or editing interface */}
+                  {editingMessageIndex === index ? (
+                    <div className="chat-message-editing">
+                      <textarea
+                        className="chat-message-edit-textarea"
+                        value={editingContent}
+                        onChange={this.handleEditingContentChange}
+                        placeholder="Edit your message..."
+                        autoFocus
+                        rows={3}
+                      />
+                      <div className="chat-message-edit-buttons">
+                        <button
+                          className="chat-message-edit-confirm"
+                          onClick={this.handleConfirmEdit}
+                          disabled={!editingContent.trim() || isLoading}
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          className="chat-message-edit-cancel"
+                          onClick={this.handleCancelEdit}
+                          disabled={isLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="chat-message-content">
+                      {message.content}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -401,7 +508,7 @@ export class Chat extends Component<ChatProps, ChatState> {
               value={input}
               onChange={this.handleInputChange}
               placeholder={`Message ${characterName}...`}
-              disabled={isLoading}
+              disabled={isLoading || editingMessageIndex !== null}
               rows={1}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -413,7 +520,7 @@ export class Chat extends Component<ChatProps, ChatState> {
             <button
               type="submit"
               className="chat-send-button"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || editingMessageIndex !== null}
             >
               Send
             </button>

@@ -232,6 +232,62 @@ export class ChatService {
   }
 
   /**
+   * Rewind chat history to a specific message and update it with new content
+   */
+  static async rewindToMessage(chatId: string, messageIndex: number, newContent: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to edit messages');
+      }
+
+      // Get current messages
+      const messages = await this.getChatMessages(chatId);
+
+      if (messageIndex < 0 || messageIndex >= messages.length) {
+        throw new Error('Invalid message index');
+      }
+
+      if (messages[messageIndex].role !== 'user') {
+        throw new Error('Can only edit user messages');
+      }
+
+      // Create new message array up to and including the edited message
+      const rewindedMessages = messages.slice(0, messageIndex);
+      
+      // Add the edited message
+      const editedMessage: Message = {
+        role: 'user',
+        content: newContent.trim(),
+        timestamp: Timestamp.now()
+      };
+      
+      rewindedMessages.push(editedMessage);
+
+      // Update chat document with the rewinded history
+      const db = getFirestore();
+      const chatRef = doc(db, "chats", chatId);
+
+      await updateDoc(chatRef, {
+        history: JSON.stringify({ messages: rewindedMessages }),
+        updatedAt: Timestamp.now()
+      });
+
+      // Update user's chat history with latest timestamp
+      const userChatHistoryRef = doc(db, "users", currentUser.uid, "chatHistory", chatId);
+      await updateDoc(userChatHistoryRef, {
+        lastUpdated: Timestamp.now()
+      });
+
+    } catch (error) {
+      console.error("Error rewinding to message:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Update chat title
    */
   static async updateChatTitle(chatId: string, newTitle: string): Promise<void> {
