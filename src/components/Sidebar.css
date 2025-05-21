@@ -87,10 +87,11 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-bottom: 5px;
+  width:100%;
 }
 
 .chat-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 
@@ -131,12 +132,14 @@
 .chat-item-content {
   overflow: hidden;
   flex: 1;
+  width: 100%;
 }
 
 .chat-item-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
   display: block;
   color: white;
   font-size: 14px;

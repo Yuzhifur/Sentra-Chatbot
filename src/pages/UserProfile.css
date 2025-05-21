@@ -110,11 +110,13 @@
   font-size: 1rem;
   cursor: pointer;
   padding-bottom: 0.25rem;
+  color: #374151;
 }
 
 .user-tab.active {
   font-weight: bold;
   border-bottom: 2px solid #374151;
+
 }
 
 .user-tab-content {
@@ -281,8 +283,7 @@
 .chat-item {
   display: inline-block;
   margin-top: 15px;
-  padding: 8px 16px;
-  background-color: #4285f4;
+  padding: 8px 10px;
   color: white;
   border: none;
   border-radius: 20px;
@@ -291,5 +292,5 @@
 }
 
 .chat-item:hover {
-  background-color: #3367d6;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }

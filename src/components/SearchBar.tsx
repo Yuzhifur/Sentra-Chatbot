@@ -274,8 +274,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 marginLeft: '10px',
                 display: 'inline-block',
                 marginTop: '15px',
-                padding: '8px 16px',
-                backgroundColor: '#4285f4',
+                padding: '8px 10px',
                 color: 'white',
                 borderRadius: '20px'
               }}

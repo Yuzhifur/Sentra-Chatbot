@@ -346,14 +346,14 @@ You can view CI results in the "Actions" tab of our GitHub repository.
    npm test
    ```
 
-7. Emulate and test locally:
-   ```bash
-   firebase emulators:start --only hosting,auth,firestore,functions,storage
-   ```
-
-8. Build for production:
+7. Build for emulator test:
    ```bash
    npm run build
+   ```
+
+8. Emulate and test locally:
+   ```bash
+   firebase emulators:start --only hosting,auth,firestore,functions,storage
    ```
 
 9. Deploy to Firebase:
