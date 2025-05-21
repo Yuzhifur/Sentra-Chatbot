@@ -1,4 +1,4 @@
-name: Sentra CI
+name: Sentra CI/CD
 
 on:
   push:
@@ -9,22 +9,69 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test -- --watchAll=false
+      - name: Run ESLint
+        run: npm run lint || echo "Linting completed with warnings"
+        continue-on-error: true
 
+      - name: Run Jest tests
+        run: npm test -- --watchAll=false --coverage
+        
+      - name: Run specific critical tests
+        run: |
+          npm test -- --watchAll=false --testMatch="**/ChatService.test.js" --testMatch="**/CharacterCreation.test.js"
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+          
       - name: Build
         run: npm run build
+
+  build-and-deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+        
+      - name: Deploy to Firebase
+        run: firebase deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
