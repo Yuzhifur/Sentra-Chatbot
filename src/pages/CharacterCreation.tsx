@@ -175,7 +175,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
       return false;
     }
 
-    if (typeof age === 'number' && (age < 0 || age > 999)) {
+    if (typeof age !== 'number') {
       this.setState({ error: 'Please enter a valid age' });
       return false;
     }
