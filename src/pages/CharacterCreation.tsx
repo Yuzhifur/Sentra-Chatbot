@@ -78,6 +78,8 @@ type CharacterCreationState = {
   residence: string;
   job: string;
   appearance: string;
+  tags: string[];
+  tagInput: string;
 
   // Personality
   temperament: string;
@@ -117,6 +119,8 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
       residence: initialData.residence || '',
       job: initialData.job || '',
       appearance: initialData.appearance || '',
+      tags: initialData.tags || [],
+      tagInput: '',
 
       // Personality
       temperament: initialData.temperament || '',
@@ -201,6 +205,29 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
     return downloadURL;
   };
 
+  // methods for hangling tags:
+  handleTagInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const filtered = e.target.value.replace(/[#,]/g, "");
+    this.setState({ tagInput: filtered });
+  };
+  
+  handleAddTag = () => {
+    const newTag = this.state.tagInput.trim().toLowerCase();
+  
+    if (!newTag || this.state.tags.includes(newTag)) return;
+  
+    this.setState(prev => ({
+      tags: [...prev.tags, newTag],
+      tagInput: ''
+    }));
+  };
+  
+  handleRemoveTag = (tagToRemove: string) => {
+    this.setState(prev => ({
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };  
+
   doSubmitClick = async (_evt: MouseEvent<HTMLButtonElement>): Promise<void> => {
     if (!this.validateForm()) return;
 
@@ -246,6 +273,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           specialAbility: this.state.specialAbility || '',
           scenario: this.state.scenario || '',
           outfit: this.state.outfit || '',
+          tags: this.state.tags,
           ...(avatarURL ? { avatar: avatarURL } : {})
         });
 
@@ -280,6 +308,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           residence: this.state.residence || '',
           job: this.state.job || '',
           appearance: this.state.appearance || '',
+          tags: this.state.tags || '',
 
           // Personality
           temperament: this.state.temperament,
@@ -304,6 +333,15 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
         // Add character to Firestore
         const charactersRef = collection(db, 'characters');
         const newCharacterRef = await addDoc(charactersRef, characterData);
+        
+        // Add the tag to Firestore
+        for (const tag of this.state.tags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', newCharacterRef.id);
+        
+          await setDoc(tagRef, { tagName: tag }, { merge: true });
+          await setDoc(tagCharRef, { addedAt: new Date() });
+        }
 
         // Upload avatar if provided
         let avatarURL = '';
@@ -507,6 +545,28 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                     onChange={this.handleInputChange}
                     placeholder="Physical description of the character..."
                   />
+                </div>
+
+                <div className="form-group">
+                  <label>Tags:</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      value={this.state.tagInput}
+                      onChange={this.handleTagInputChange}
+                      placeholder="Enter a tag"
+                    />
+                    <button type="button" onClick={this.handleAddTag}>Add</button>
+                  </div>
+
+                  <div className="tag-chip-container">
+                    {this.state.tags.map(tag => (
+                      <span key={tag} className="tag-chip">
+                        #{tag}
+                        <button onClick={() => this.handleRemoveTag(tag)}>×</button>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

@@ -172,6 +172,12 @@ const Home: React.FC = () => {
             <br />
             <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
             <br />
+            <p><strong>Tags:</strong>{" "}
+            {selectedCharacter.tags && selectedCharacter.tags.length > 0
+              ? selectedCharacter.tags.map(tag => `${tag}`).join(", ")
+              : "No tags provided."}
+            </p>
+            <br />
             {selectedCharacter.imageUrl && (
               <img src={selectedCharacter.imageUrl} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
             )}
