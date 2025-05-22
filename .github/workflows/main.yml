@@ -49,9 +49,8 @@ jobs:
       - name: Build
         run: npm run build
 
-  build-and-deploy:
+  build:
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     
     steps:
@@ -67,13 +66,13 @@ jobs:
       - name: Install dependencies
         run: npm install
         
-      - name: Build
+      - name: Build project
         run: npm run build
         
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-        
-      - name: Deploy to Firebase
-        run: firebase deploy --only hosting
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-files
+          path: public/
+          retention-days: 7
