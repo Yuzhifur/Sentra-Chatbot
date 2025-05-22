@@ -15,6 +15,7 @@
   padding: 20px;
   overflow-y: auto;
   flex: 1;
+  width: 280px;
 }
 
 .sidebar-header {
@@ -96,12 +97,17 @@
 
 
 .delete-button {
+  margin-right: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   font-size: 14px;
   transition: color 0.2s;
+  padding: 4px 6px;
 }
 
 .delete-button:hover {
@@ -133,6 +139,7 @@
   overflow: hidden;
   flex: 1;
   width: 100%;
+  min-width: 0;
 }
 
 .chat-item-title {

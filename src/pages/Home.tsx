@@ -51,23 +51,23 @@ const Home: React.FC = () => {
     const getCharacterList = async () => {
       try {
         const data = await getDocs(characterCollectionRef);
-  
+
         const characterPromises = data.docs.map(async (doc) => {
           const docData = doc.data();
-  
+
           return {
             ...docData,
             docId: doc.id,  // Store the document ID separately
           };
         });
-  
+
         const characterList = await Promise.all(characterPromises);
         setCharacterList(characterList);
       } catch (err) {
         console.error(err);
       }
     };
-  
+
     getCharacterList();
   }, []);
 
@@ -181,7 +181,8 @@ const Home: React.FC = () => {
               style={{
                 cursor: 'pointer',
                 fontSize: '15px',
-                marginLeft: '10px'
+                marginLeft: '10px',
+                display: 'inline-block'
               }}
             >
               Let's Chat! ✏️

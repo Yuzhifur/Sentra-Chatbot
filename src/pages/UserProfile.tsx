@@ -382,7 +382,8 @@ const UserProfile: React.FC = () => {
               style={{
                 cursor: 'pointer',
                 fontSize: '15px',
-                marginLeft: '10px'
+                marginLeft: '10px',
+                display: 'inline-block'
               }}
             >
               Let's Chat! ✏️

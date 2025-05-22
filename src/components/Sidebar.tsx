@@ -137,7 +137,7 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                       <div key={chat.id} className="chat-item">
                         <div
                             onClick={() => handleChatClick(chat.id, chat.characterId)}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center', width: 0.85 }}
                         >
                           <div className="avatar">
                             {chat.avatar ? (
