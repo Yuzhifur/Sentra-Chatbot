@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import CharacterChatPopup from './CharacterChatPopup';
 import './SearchBar.css';
 
 type SearchBarProps = {
@@ -29,6 +30,7 @@ interface CharacterResult extends BaseSearchResult {
   name: string;
   authorDisplayName: string;
   characterDescription: string;
+  docId: string; // Add docId for consistency with home.tsx
 }
 
 // Union type for all possible search results
@@ -43,6 +45,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterResult | null>(null);
+  const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
+  const [characterForChat, setCharacterForChat] = useState<{id: string, name: string} | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -114,6 +118,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           results.push({
             type: 'character',
             id: doc.id,
+            docId: doc.id, // Add docId for consistency
             intId: charData.id || "",
             name: charData.name || "Unnamed Character",
             avatar: charData.avatar || "",
@@ -139,6 +144,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           results.push({
             type: 'character',
             id: doc.id,
+            docId: doc.id, // Add docId for consistency
             intId: charData.id || "",
             name: charData.name || "Unnamed Character",
             avatar: charData.avatar || "",
@@ -173,6 +179,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const closeCharacterPopup = () => {
+    setSelectedCharacter(null);
+  };
+
+  const handleStartChat = (characterId: string, characterName: string) => {
+    setCharacterForChat({ id: characterId, name: characterName });
+    setShowChatPopup(true);
+    // Close character popup when opening chat popup
     setSelectedCharacter(null);
   };
 
@@ -258,31 +271,39 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={closeCharacterPopup}>×</button>
             <h1>{selectedCharacter.name}</h1>
+            <br />
             <p><strong>ID:</strong> #{selectedCharacter.intId}</p>
+            <br />
             <p><strong>Author:</strong> {selectedCharacter.authorDisplayName}</p>
+            <br />
             <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
+            <br />
             {selectedCharacter.avatar && (
               <img src={selectedCharacter.avatar} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
             )}
-            <span
+            <button
               className="chat-item"
-              onClick={() => navigate(`/chat/${selectedCharacter.id}`)}
-              title="Chat with this character"
+              onClick={() => handleStartChat(selectedCharacter.docId, selectedCharacter.name)}
               style={{
                 cursor: 'pointer',
                 fontSize: '15px',
                 marginLeft: '10px',
-                display: 'inline-block',
-                marginTop: '15px',
-                padding: '8px 10px',
-                color: 'white',
-                borderRadius: '20px'
+                display: 'inline-block'
               }}
             >
               Let's Chat! ✏️
-            </span>
+            </button>
           </div>
         </div>
+      )}
+
+      {/* Chat History Popup */}
+      {showChatPopup && characterForChat && (
+        <CharacterChatPopup
+          characterId={characterForChat.id}
+          characterName={characterForChat.name}
+          onClose={() => setShowChatPopup(false)}
+        />
       )}
     </div>
   );
