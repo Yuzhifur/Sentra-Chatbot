@@ -336,27 +336,22 @@ You can view CI results in the "Actions" tab of our GitHub repository.
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
    ```
 
-5. Start the development server:
-   ```bash
-   npm start
-   ```
-
-6. Running tests:
+5. Running tests:
    ```bash
    npm test
    ```
 
-7. Build for emulator test:
+6. Build for emulator test:
    ```bash
    npm run build
    ```
 
-8. Emulate and test locally:
+7. Emulate and test locally:
    ```bash
    firebase emulators:start --only hosting,auth,firestore,functions,storage
    ```
 
-9. Deploy to Firebase:
+8. Deploy to Firebase:
     ```bash
     firebase deploy
     ```
