@@ -194,21 +194,23 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                 <div className="history-section">
                   <h3 className="section-header">Yesterday</h3>
                   {yesterdayChats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      className="chat-item"
-                      onClick={() => handleChatClick(chat.id, chat.characterId)}
-                    >
-                      <div className="avatar">
-                        {chat.avatar ? (
-                          <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
-                        ) : (
-                          (chat.characterName?.[0] || 'C').toUpperCase()
-                        )}
+                    <div key={chat.id} className="chat-item">
+                      <div
+                        onClick={() => handleChatClick(chat.id, chat.characterId)}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', width: 0.85 }}
+                      >
+                        <div className="avatar">
+                          {chat.avatar ? (
+                            <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
+                          ) : (
+                            (chat.characterName?.[0] || 'C').toUpperCase()
+                          )}
+                        </div>
+                        <div className="chat-item-content">
+                          <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                        </div>
                       </div>
-                      <div className="chat-item-content">
-                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
-                      </div>
+                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
                     </div>
                   ))}
                 </div>
@@ -218,21 +220,23 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                 <div className="history-section">
                   <h3 className="section-header">Older</h3>
                   {olderChats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      className="chat-item"
-                      onClick={() => handleChatClick(chat.id, chat.characterId)}
-                    >
-                      <div className="avatar">
-                        {chat.avatar ? (
-                          <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
-                        ) : (
-                          (chat.characterName?.[0] || 'C').toUpperCase()
-                        )}
+                    <div key={chat.id} className="chat-item">
+                      <div
+                        onClick={() => handleChatClick(chat.id, chat.characterId)}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', width: 0.85 }}
+                      >
+                        <div className="avatar">
+                          {chat.avatar ? (
+                            <img src={chat.avatar} alt={chat.characterName || 'Character'} width="40" height="40" />
+                          ) : (
+                            (chat.characterName?.[0] || 'C').toUpperCase()
+                          )}
+                        </div>
+                        <div className="chat-item-content">
+                          <span className="chat-item-title">{getDisplayTitle(chat)}</span>
+                        </div>
                       </div>
-                      <div className="chat-item-content">
-                        <span className="chat-item-title">{getDisplayTitle(chat)}</span>
-                      </div>
+                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
                     </div>
                   ))}
                 </div>
