@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChatService } from '../services/ChatService';
 import './Sidebar.css';
 
@@ -19,22 +19,56 @@ interface RecentChat {
 const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
   const currentYear = new Date().getFullYear();
   const navigate = useNavigate();
+  const location = useLocation();
   const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Function to fetch recent chats - extracted for reusability
+  const fetchRecentChats = async () => {
+    try {
+      const chats = await ChatService.getRecentChats(10);
+      setRecentChats(chats);
+    } catch (error) {
+      console.error("Error fetching recent chats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch on component mount
   useEffect(() => {
-    const fetchRecentChats = async () => {
-      try {
-        const chats = await ChatService.getRecentChats(10);
-        setRecentChats(chats);
-      } catch (error) {
-        console.error("Error fetching recent chats:", error);
-      } finally {
-        setLoading(false);
-      }
+    fetchRecentChats();
+  }, []);
+
+  // Refetch chats when navigating back to home or when URL changes to/from chat routes
+  useEffect(() => {
+    // Check if we're navigating to home or away from a chat
+    const currentPath = location.pathname;
+
+    // Refetch if we're on home page or just navigated away from a chat
+    if (currentPath === '/' || currentPath.startsWith('/profile') || currentPath.startsWith('/character-creation')) {
+      fetchRecentChats();
+    }
+  }, [location.pathname]);
+
+  // Listen for focus events (when user comes back to the tab/window)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchRecentChats();
     };
 
-    fetchRecentChats();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Listen for custom events when chat list needs updating
+  useEffect(() => {
+    const handleChatListUpdate = () => {
+      fetchRecentChats();
+    };
+
+    window.addEventListener('chatListUpdated', handleChatListUpdate);
+    return () => window.removeEventListener('chatListUpdated', handleChatListUpdate);
   }, []);
 
   // Function to handle chat click
