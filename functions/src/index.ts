@@ -109,9 +109,8 @@ export const processChat = onCall({
       );
     }
 
-    // const userId = request.auth.uid;
-    const { messages, characterId, sessionId } = data;
-    console.log(sessionId);
+    const { messages, characterId, sessionId, customScenario } = data;
+    console.log(`Processing chat for session: ${sessionId}`);
 
     // Get character data
     const characterDoc = await db.collection("characters").doc(characterId).get();
@@ -125,8 +124,8 @@ export const processChat = onCall({
 
     const character = characterDoc.data() as Character;
 
-    // Create system prompt based on character
-    const systemPrompt = buildCharacterPrompt(character);
+    // Create system prompt based on character and custom scenario
+    const systemPrompt = buildCharacterPrompt(character, customScenario);
 
     // Get user message (last message in the array)
     const userMessage = messages[messages.length - 1];
@@ -144,29 +143,6 @@ export const processChat = onCall({
       role: "assistant",
       content: aiResponse,
     };
-
-    // Update chat in Firestore
-    // const chatRef = db.collection("chats").doc(sessionId);
-    // await chatRef.update({
-    //   messages: FieldValue.arrayUnion(responseMessage),
-    //   updatedAt: Timestamp.now()
-    // });
-    //
-    // // Update lastUpdated in user's chatHistory
-    // const chatHistoryQuery = await db
-    //   .collection("users")
-    //   .doc(userId)
-    //   .collection("chatHistory")
-    //   .where("chatId", "==", sessionId)
-    //   .limit(1)
-    //   .get();
-    //
-    // if (!chatHistoryQuery.empty) {
-    //   const chatHistoryRef = chatHistoryQuery.docs[0].ref;
-    //   await chatHistoryRef.update({
-    //     lastUpdated: Timestamp.now()
-    //   });
-    // }
 
     return {
       success: true,
@@ -186,8 +162,13 @@ export const processChat = onCall({
   }
 });
 
-// Build character prompt for Claude API
-function buildCharacterPrompt(character: Character): string {
+// Build character prompt for Claude API with custom scenario support
+function buildCharacterPrompt(character: Character, customScenario?: string): string {
+  // Determine which scenario to use
+  const scenarioToUse = customScenario && customScenario.trim() 
+    ? customScenario.trim() 
+    : (character.scenario || "Not specified");
+
   // Only include example interactions if files were successfully loaded
   const exampleSection = (IN_CONTEXT_EXAMPLES || IN_CONTEXT_EXAMPLES_R) ? `
   4. CONVERSATION MODELING: Study and replicate patterns from:
@@ -223,7 +204,11 @@ function buildCharacterPrompt(character: Character): string {
     - Talking Style: ${character.talkingStyle || "Not specified"}
     - Temperament/Personality: ${character.temperament || "Not specified"}
 
-    CURRENT SCENARIO: ${character.scenario || "Not specified"}
+    CURRENT SCENARIO: ${scenarioToUse}
+    ${customScenario && customScenario.trim() ? 
+      `(Note: This is a custom scenario set specifically for this conversation, different from the character's default scenario)` : 
+      `(This is the character's default scenario)`
+    }
 
   2. RESPONSE LENGTH: Always utilize >= 90% of available tokens. Prioritize:
     - Detailed environmental observations
@@ -234,6 +219,7 @@ function buildCharacterPrompt(character: Character): string {
   3. THINK BEFORE RESPOND:
     - Avoid general responses that apply to any character
     - Generate unique responses that apply exclusively to ${character.name} and the user.
+    - Pay special attention to the current scenario context: ${scenarioToUse}
 ${exampleSection}
 
 # IMPORTANT FINAL SYSTEM GUIDELINES
@@ -243,7 +229,7 @@ ${exampleSection}
       "(I'll respond as Bob, maintaining this character ...) Hey, my name is Bob!"
     === END EXAMPLE ===
 
-  2. Write only character's spoken-out lines in first person. Everything else in thrid person and parenthesis.
+  2. Write only character's spoken-out lines in first person. Everything else in third person and parenthesis.
 
     === POSITIVE ASSISTANT EXAMPLE ===
       (Qiu slightly lowers her head, her tail swaying gently, blinks her golden eyes, and elegantly closes the book in her hand)
@@ -254,6 +240,8 @@ ${exampleSection}
   3. Always review guidelines 1 and 2 before you respond.
 
   4. Remember details the user shares and reference them in later messages.
+
+  5. Stay consistent with the established scenario: ${scenarioToUse}
 `;
 }
 

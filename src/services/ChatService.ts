@@ -13,7 +13,7 @@ import {
   Timestamp,
   DocumentData,
   DocumentReference,
-    deleteDoc
+  deleteDoc
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions'
@@ -34,6 +34,7 @@ export interface ChatData {
   userId: string;
   userUsername: string;
   history: string;
+  scenario: string;  // NEW: Custom scenario for this chat
   title?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -42,12 +43,9 @@ export interface ChatData {
 export class ChatService {
   /**
    * Create a new chat session between a user and a character
+   * Now includes scenario customization
    */
-  /**
-   * Create a new chat session between a user and a character
-   * With added check to prevent duplicate creation
-   */
-  static async createChatSession(characterId: string): Promise<string> {
+  static async createChatSession(characterId: string, customScenario?: string): Promise<string> {
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
@@ -75,10 +73,9 @@ export class ChatService {
 
       const userData = userDoc.data();
 
-      // Create a unique chat ID using timestamp and random number
-      // Add a safeguard to help ensure uniqueness
+      // Create a unique chat ID
       const timestamp = Date.now();
-      const randomNum = Math.floor(Math.random() * 10000); // Increase range
+      const randomNum = Math.floor(Math.random() * 10000);
       const uniqueId = `${currentUser.uid.substring(0, 4)}_${timestamp}_${randomNum}`;
       const chatId = `chat_${uniqueId}`;
       const chatRef = doc(db, "chats", chatId);
@@ -89,13 +86,19 @@ export class ChatService {
       // Create default title
       const defaultTitle = `Chat with ${characterData.name}`;
 
-      // Create chat document
+      // Determine scenario to use
+      const scenarioToUse = customScenario && customScenario.trim() 
+        ? customScenario.trim() 
+        : (characterData.scenario || "");
+
+      // Create chat document with scenario
       const chatData: ChatData = {
         characterId: characterId,
         characterName: characterData.name || 'Character',
         userId: currentUser.uid,
         userUsername: userData.username || userData.displayName || 'User',
         history: JSON.stringify(emptyHistory),
+        scenario: scenarioToUse,  // NEW: Store the scenario for this chat
         title: defaultTitle,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
@@ -121,13 +124,63 @@ export class ChatService {
     }
   }
 
-  // Delete an existed chat session
-  static async deleteChatSession(chatId: string): Promise<void> {
-      const db = getFirestore();
+  /**
+   * Update the scenario for an existing chat
+   */
+  static async updateChatScenario(chatId: string, newScenario: string): Promise<void> {
+    try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
 
       if (!currentUser) {
+        throw new Error('You must be logged in to update chat scenario');
+      }
+
+      const db = getFirestore();
+      const chatRef = doc(db, "chats", chatId);
+
+      // Verify the chat exists and belongs to the user
+      const chatDoc = await getDoc(chatRef);
+      if (!chatDoc.exists()) {
+        throw new Error(`Chat session ${chatId} not found`);
+      }
+
+      const chatData = chatDoc.data() as ChatData;
+      if (chatData.userId !== currentUser.uid) {
+        throw new Error('You can only update your own chats');
+      }
+
+      // Update the scenario
+      await updateDoc(chatRef, {
+        scenario: newScenario.trim(),
+        updatedAt: Timestamp.now()
+      });
+    } catch (error) {
+      console.error("Error updating chat scenario:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the scenario for a specific chat
+   */
+  static async getChatScenario(chatId: string): Promise<string> {
+    try {
+      const chatData = await this.getChatSession(chatId);
+      return chatData.scenario || "";
+    } catch (error) {
+      console.error("Error getting chat scenario:", error);
+      throw error;
+    }
+  }
+
+  // Delete an existed chat session
+  static async deleteChatSession(chatId: string): Promise<void> {
+    const db = getFirestore();
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
       throw new Error("You must be logged in to delete chats");
     }
 
@@ -135,12 +188,10 @@ export class ChatService {
     const chatRef = doc(db, 'chats', chatId);
     await deleteDoc(chatRef);
 
-    // deletet the file in chatHistory under user directory
+    // delete the file in chatHistory under user directory
     const historyRef = doc(db, 'users', currentUser.uid, 'chatHistory', chatId);
     await deleteDoc(historyRef);
   }
-
-
 
   /**
    * Get an existing chat session
@@ -328,10 +379,11 @@ export class ChatService {
 
   /**
    * Generate AI response in chat
+   * Now passes the chat's custom scenario to the AI
    */
   static async generateResponse(chatId: string): Promise<Message> {
     try {
-      // Get chat session
+      // Get chat session (includes custom scenario)
       const chatData = await this.getChatSession(chatId);
 
       // Get character data
@@ -347,15 +399,16 @@ export class ChatService {
       // Get current messages
       const messages = await this.getChatMessages(chatId);
 
-      // Generate AI response (simulated for now)
+      // Generate AI response
       const functions = getFunctions();
       const processChatFunction = httpsCallable(functions, 'processChat');
 
-      // Prepare data for the cloud function
+      // Prepare data for the cloud function - include the chat's custom scenario
       const functionData = {
         messages: messages,
         characterId: chatData.characterId,
-        sessionId: chatId
+        sessionId: chatId,
+        customScenario: chatData.scenario  // NEW: Pass custom scenario
       };
 
       // Call the cloud function
@@ -415,7 +468,6 @@ export class ChatService {
         // Check if characterId exists, if not, try to update it
         const data = docSnapshot.data();
         const chatId = docSnapshot.id;
-
 
         if (!data.characterId && docSnapshot.id) {
           try {
