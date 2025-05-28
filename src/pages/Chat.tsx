@@ -16,9 +16,13 @@ const ChatWrapper: React.FC = () => {
   const [initialChatId, setInitialChatId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chatTitle, setChatTitle] = useState<string>('');
-  
+
   // Use a ref to track if we've already initialized
   const hasInitialized = useRef<boolean>(false);
+
+  const notifySidebarUpdate = () => {
+    window.dispatchEvent(new CustomEvent('chatListUpdated'));
+  };
 
   useEffect(() => {
     // This function runs only once to set up the chat
@@ -27,15 +31,15 @@ const ChatWrapper: React.FC = () => {
       if (hasInitialized.current) {
         return;
       }
-      
+
       // Mark as initialized immediately to prevent concurrent calls
       hasInitialized.current = true;
-      
+
       try {
         // Case 1: Both characterId and sessionId exist - use existing chat session
         if (characterId && sessionId) {
           console.log(`Using existing chat: ${sessionId} with character: ${characterId}`);
-          
+
           // Get the chat data to retrieve the title
           const chatData = await ChatService.getChatSession(sessionId);
           if (chatData.title) {
@@ -44,7 +48,7 @@ const ChatWrapper: React.FC = () => {
             // If no title exists, set a default one based on character name
             setChatTitle(`Chat with ${chatData.characterName}`);
           }
-          
+
           setInitialChatId(sessionId);
           setInitialLoading(false);
           return;
@@ -54,15 +58,17 @@ const ChatWrapper: React.FC = () => {
         if (characterId && !sessionId) {
           console.log(`Creating new chat with character: ${characterId}`);
           const newChatId = await ChatService.createChatSession(characterId);
-          
+
           // Get character name to set a default title
           const characterData = await CharacterService.getCharacter(characterId);
           setChatTitle(`Chat with ${characterData.name}`);
-          
+
           // Set local state first
           setInitialChatId(newChatId);
           setInitialLoading(false);
-          
+
+          notifySidebarUpdate();
+
           // Then update URL with the new chat ID without triggering a new navigation
           navigate(`/chat/${characterId}/${newChatId}`, { replace: true });
           return;
@@ -200,7 +206,7 @@ export class Chat extends Component<ChatProps, ChatState> {
     if (prevProps.chatId !== this.props.chatId) {
       this.loadChatData();
     }
-    
+
     // Update title if initial title changes
     if (prevProps.initialChatTitle !== this.props.initialChatTitle) {
       this.setState({ chatTitle: this.props.initialChatTitle });
@@ -215,7 +221,7 @@ export class Chat extends Component<ChatProps, ChatState> {
     try {
       const messages = await ChatService.getChatMessages(this.props.chatId);
       this.setState({ messages });
-      
+
       // Get chat session to get the title
       const chatSession = await ChatService.getChatSession(this.props.chatId);
       if (chatSession.title && chatSession.title !== this.state.chatTitle) {
@@ -318,7 +324,7 @@ export class Chat extends Component<ChatProps, ChatState> {
 
   handleConfirmEdit = async () => {
     const { editingMessageIndex, editingContent, messages } = this.state;
-    
+
     if (editingMessageIndex === null || !editingContent.trim()) {
       return;
     }
@@ -328,8 +334,8 @@ export class Chat extends Component<ChatProps, ChatState> {
     try {
       // Rewind the chat history to the edited message point
       await ChatService.rewindToMessage(
-        this.props.chatId, 
-        editingMessageIndex, 
+        this.props.chatId,
+        editingMessageIndex,
         editingContent.trim()
       );
 
@@ -409,11 +415,11 @@ export class Chat extends Component<ChatProps, ChatState> {
                 )}
                 <h1 className="chat-character-name">{characterName}</h1>
               </div>
-              
+
               {/* Chat title editor component */}
               <div className="chat-title-wrapper">
-                <ChatTitleEditor 
-                  chatId={this.props.chatId} 
+                <ChatTitleEditor
+                  chatId={this.props.chatId}
                   initialTitle={chatTitle}
                 />
               </div>
@@ -454,7 +460,7 @@ export class Chat extends Component<ChatProps, ChatState> {
                       </button>
                     )}
                   </div>
-                  
+
                   {/* Show message content or editing interface */}
                   {editingMessageIndex === index ? (
                     <div className="chat-message-editing">
