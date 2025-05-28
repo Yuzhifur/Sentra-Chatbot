@@ -8,3 +8,6 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+src/in_context.txt
+src/in_context_r.txt
