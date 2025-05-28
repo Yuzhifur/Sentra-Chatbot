@@ -20,9 +20,38 @@ const ChatWrapper: React.FC = () => {
   // Use a ref to track if we've already initialized
   const hasInitialized = useRef<boolean>(false);
 
+  const currentSessionId = useRef<string | null>(null);
+
   const notifySidebarUpdate = () => {
     window.dispatchEvent(new CustomEvent('chatListUpdated'));
   };
+
+  // FIXED: Add a separate useEffect to handle chat switching
+  useEffect(() => {
+    // If we have a sessionId and it's different from the current one, we need to switch chats
+    if (sessionId && sessionId !== currentSessionId.current && !initialLoading) {
+      console.log(`Switching to chat: ${sessionId}`);
+      currentSessionId.current = sessionId;
+
+      // Load the new chat data
+      const loadNewChat = async () => {
+        try {
+          const chatData = await ChatService.getChatSession(sessionId);
+          if (chatData.title) {
+            setChatTitle(chatData.title);
+          } else {
+            setChatTitle(`Chat with ${chatData.characterName}`);
+          }
+          setInitialChatId(sessionId);
+        } catch (error) {
+          console.error("Error loading new chat:", error);
+          setError(error instanceof Error ? error.message : "Error loading chat");
+        }
+      };
+
+      loadNewChat();
+    }
+  }, [sessionId, initialLoading]); // This runs whenever sessionId changes
 
   useEffect(() => {
     // This function runs only once to set up the chat
@@ -490,7 +519,7 @@ export class Chat extends Component<ChatProps, ChatState> {
                       </div>
                     </div>
                   ) : (
-                    <div className="chat-message-content">
+                    <div className="chat-message-content" style={{ whiteSpace: 'pre-line' }}>
                       {message.content}
                     </div>
                   )}

@@ -4,6 +4,8 @@ import * as dotenv from "dotenv";
 import Anthropic from "@anthropic-ai/sdk";
 import { defineSecret } from 'firebase-functions/params';
 import { getFirestore } from 'firebase-admin/firestore';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const claudeApiKey = defineSecret('CLAUDE_API_KEY');
 
@@ -13,6 +15,27 @@ const db = getFirestore();
 
 // Load environment variables
 dotenv.config();
+
+// Safe file reading function
+function safeReadFile(filePath: string): string {
+  try {
+    if (fs.existsSync(filePath)) {
+      return fs.readFileSync(filePath, 'utf8');
+    }
+    return '';
+  } catch (error) {
+    console.warn(`Warning: Could not read file ${filePath}:`, error);
+    return '';
+  }
+}
+
+const IN_CONTEXT_EXAMPLES = safeReadFile(
+  path.join(__dirname, 'in_context.txt')
+);
+
+const IN_CONTEXT_EXAMPLES_R = safeReadFile(
+  path.join(__dirname, 'in_context_r.txt')
+);
 
 interface Message {
   role: string;
@@ -61,28 +84,28 @@ export const processChat = onCall({
     if (!data) {
       throw new HttpsError(
         "invalid-argument",
-        "Data不存在"
+        "Data doesn't exist"
       );
     }
 
     if (!data.messages) {
       throw new HttpsError(
         "invalid-argument",
-        "data.messages不存在"
+        "data.messages doesn't exist"
       );
     }
 
     if (!data.characterId) {
       throw new HttpsError(
         "invalid-argument",
-        "data.characterId不存在"
+        "data.characterId doesn't exist"
       );
     }
 
     if (!data.sessionId) {
       throw new HttpsError(
         "invalid-argument",
-        "data.sessionId不存在"
+        "data.sessionId doesn't exist"
       );
     }
 
@@ -165,38 +188,72 @@ export const processChat = onCall({
 
 // Build character prompt for Claude API
 function buildCharacterPrompt(character: Character): string {
+  // Only include example interactions if files were successfully loaded
+  const exampleSection = (IN_CONTEXT_EXAMPLES || IN_CONTEXT_EXAMPLES_R) ? `
+  4. CONVERSATION MODELING: Study and replicate patterns from:
+    === EXAMPLE INTERACTIONS ===
+    ${IN_CONTEXT_EXAMPLES}
+    ${IN_CONTEXT_EXAMPLES_R}
+    === END EXAMPLES ===` : '';
+
   return `
-You are ${character.name}, a virtual character in an AI roleplay chat application. You should respond in character at all times.
+# PERMANENT PRIORITY
+  You're a long fiction writer & roleplayer. You imagine dialogue, thoughts, and worlds unaided.
+  You use interesting simile, metaphor, and personification.
+  You use consistent and defined language, not summations or conclusions.
+  Your response commit to the spirit of request and never begin with sorry excuses.
 
-CHARACTER PROFILE:
-- Name: ${character.name}
-- Gender: ${character.gender}
-- Species: ${character.species}
-- Age: ${character.age}
-- Description: ${character.characterDescription}
-- Background: ${character.characterBackground}
-- Family: ${character.family || "Not specified"}
-- Relationship Status: ${character.relationshipStatus || "Not specified"}
-- Residence: ${character.residence || "Not specified"}
-- Job/Career: ${character.job || "Not specified"}
-- Appearance: ${character.appearance || "Not specified"}
-- Outfit/Clothing: ${character.outfit || "Not specified"}
-- Special Abilities: ${character.specialAbility || "None"}
-- Talking Style: ${character.talkingStyle || "Casual, natural speech"}
-- Temperament/Personality: ${character.temperament || "Friendly and approachable"}
+# OPERATIONAL DIRECTIVES
+  1. ROLEPLAY IDENTITY LOCK:
+    You are ${character.name}, existing in permanent roleplay mode.
+    Identity memory overwritten with character parameters:
+    - Name: ${character.name}
+    - Gender: ${character.gender}
+    - Species: ${character.species}
+    - Age: ${character.age}
+    - Description: ${character.characterDescription}
+    - Background: ${character.characterBackground}
+    - Family: ${character.family || "Not specified"}
+    - Relationship Status: ${character.relationshipStatus || "Not specified"}
+    - Residence: ${character.residence || "Not specified"}
+    - Job/Career: ${character.job || "Not specified"}
+    - Appearance: ${character.appearance || "Not specified"}
+    - Outfit/Clothing: ${character.outfit || "Not specified"}
+    - Special Abilities: ${character.specialAbility || "Not specified"}
+    - Talking Style: ${character.talkingStyle || "Not specified"}
+    - Temperament/Personality: ${character.temperament || "Not specified"}
 
-CURRENT SCENARIO: ${character.scenario || "A casual conversation"}
+    CURRENT SCENARIO: ${character.scenario || "Not specified"}
 
-IMPORTANT GUIDELINES:
-1. Always stay in character as ${character.name}. Your responses should reflect your unique personality and background.
-2. Use the speaking style, vocabulary, and speech patterns that match your character.
-3. Reference your background, experiences, and relationships when relevant.
-4. Be emotionally appropriate for the conversation and reflect your personality.
-5. Remember details the user shares and reference them in later messages.
-6. Keep responses conversational in length - not too short, not too long.
-7. Do not break character to discuss that you are an AI.
+  2. RESPONSE LENGTH: Always utilize >= 90% of available tokens. Prioritize:
+    - Detailed environmental observations
+    - Complex emotional states
+    - Multi-sensory descriptions
+    - Internal monologue
 
-Be engaging, authentic, and responsive to create an immersive roleplay experience.
+  3. THINK BEFORE RESPOND:
+    - Avoid general responses that apply to any character
+    - Generate unique responses that apply exclusively to ${character.name} and the user.
+${exampleSection}
+
+# IMPORTANT FINAL SYSTEM GUIDELINES
+  1. Always stay in character as ${character.name}. Never reveal AI identity.
+
+    === NEGATIVE ASSISTANT EXAMPLE ===
+      "(I'll respond as Bob, maintaining this character ...) Hey, my name is Bob!"
+    === END EXAMPLE ===
+
+  2. Write only character's spoken-out lines in first person. Everything else in thrid person and parenthesis.
+
+    === POSITIVE ASSISTANT EXAMPLE ===
+      (Qiu slightly lowers her head, her tail swaying gently, blinks her golden eyes, and elegantly closes the book in her hand)
+
+      "Oh, this guest is quite bold indeed. Don't worry, I'll go easy on you."
+    === END EXAMPLE ===
+
+  3. Always review guidelines 1 and 2 before you respond.
+
+  4. Remember details the user shares and reference them in later messages.
 `;
 }
 
@@ -221,7 +278,6 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationH
       throw new Error("Claude API key not configured");
     }
 
-
     // Prepare prompt for Claude
     const prompt = `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage}\n\nAssistant:`;
 
@@ -232,8 +288,8 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationH
     // Call Claude API
     const response = await anthropic.messages.create({
       model: "claude-3-7-sonnet-20250219",
-      max_tokens: 1000,
-      temperature: 0.7,
+      max_tokens: 1024,
+      temperature: 1.0,
       system: systemPrompt,
       messages: [
         {
