@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
+    "lint": "echo 'Linting placeholder - add ESLint configuration as needed'",
     "build": "webpack --config ./src/webpack.config.js",
     "emulate": "firebase emulators:start",
     "emulate:all": "firebase emulators:start --import=./emulator-data --export-on-exit",

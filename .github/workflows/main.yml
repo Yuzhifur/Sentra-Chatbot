@@ -34,9 +34,10 @@ jobs:
       - name: Run Jest tests
         run: npm test -- --watchAll=false --coverage
         
-      - name: Run specific critical tests
-        run: |
-          npm test -- --watchAll=false --testMatch="**/ChatService.test.js" --testMatch="**/CreateAccount.test.js"
+      # REMOVE THIS REDUNDANT SECTION:
+      # - name: Run specific critical tests
+      #   run: |
+      #     npm test -- --watchAll=false --testMatch="**/ChatService.test.js" --testMatch="**/CreateAccount.test.js"
 
       - name: Upload test coverage
         uses: actions/upload-artifact@v4
