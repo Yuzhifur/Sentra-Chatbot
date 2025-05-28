@@ -17,57 +17,28 @@ const ChatWrapper: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [chatTitle, setChatTitle] = useState<string>('');
 
-  // Use a ref to track if we've already initialized
-  const hasInitialized = useRef<boolean>(false);
-
+  // Remove the hasInitialized ref - it's causing issues with chat switching
   const currentSessionId = useRef<string | null>(null);
 
   const notifySidebarUpdate = () => {
     window.dispatchEvent(new CustomEvent('chatListUpdated'));
   };
 
-  // FIXED: Add a separate useEffect to handle chat switching
+  // MAIN useEffect - handles both initial setup AND chat switching
   useEffect(() => {
-    // If we have a sessionId and it's different from the current one, we need to switch chats
-    if (sessionId && sessionId !== currentSessionId.current && !initialLoading) {
-      console.log(`Switching to chat: ${sessionId}`);
-      currentSessionId.current = sessionId;
-
-      // Load the new chat data
-      const loadNewChat = async () => {
-        try {
-          const chatData = await ChatService.getChatSession(sessionId);
-          if (chatData.title) {
-            setChatTitle(chatData.title);
-          } else {
-            setChatTitle(`Chat with ${chatData.characterName}`);
-          }
-          setInitialChatId(sessionId);
-        } catch (error) {
-          console.error("Error loading new chat:", error);
-          setError(error instanceof Error ? error.message : "Error loading chat");
-        }
-      };
-
-      loadNewChat();
-    }
-  }, [sessionId, initialLoading]); // This runs whenever sessionId changes
-
-  useEffect(() => {
-    // This function runs only once to set up the chat
-    const setupChat = async () => {
-      // Check if we've already initialized to prevent double execution
-      if (hasInitialized.current) {
-        return;
-      }
-
-      // Mark as initialized immediately to prevent concurrent calls
-      hasInitialized.current = true;
-
+    const setupOrSwitchChat = async () => {
       try {
         // Case 1: Both characterId and sessionId exist - use existing chat session
         if (characterId && sessionId) {
-          console.log(`Using existing chat: ${sessionId} with character: ${characterId}`);
+          console.log(`Loading chat: ${sessionId} with character: ${characterId}`);
+
+          // If this is the same session we're already viewing, don't reload
+          if (currentSessionId.current === sessionId && !initialLoading) {
+            return;
+          }
+
+          // Update current session tracking
+          currentSessionId.current = sessionId;
 
           // Get the chat data to retrieve the title
           const chatData = await ChatService.getChatSession(sessionId);
@@ -79,6 +50,7 @@ const ChatWrapper: React.FC = () => {
           }
 
           setInitialChatId(sessionId);
+          setError(null); // Clear any previous errors
           setInitialLoading(false);
           return;
         }
@@ -86,15 +58,25 @@ const ChatWrapper: React.FC = () => {
         // Case 2: Only characterId exists - create a new chat session
         if (characterId && !sessionId) {
           console.log(`Creating new chat with character: ${characterId}`);
+
+          // Only create new chat if we don't already have one loaded
+          if (!initialLoading && currentSessionId.current) {
+            return;
+          }
+
           const newChatId = await ChatService.createChatSession(characterId);
 
           // Get character name to set a default title
           const characterData = await CharacterService.getCharacter(characterId);
           setChatTitle(`Chat with ${characterData.name}`);
 
+          // Update tracking
+          currentSessionId.current = newChatId;
+
           // Set local state first
           setInitialChatId(newChatId);
           setInitialLoading(false);
+          setError(null);
 
           notifySidebarUpdate();
 
@@ -110,17 +92,22 @@ const ChatWrapper: React.FC = () => {
         console.error("Error setting up chat session:", error);
         setError(error instanceof Error ? error.message : "Unknown error");
         setInitialLoading(false);
-        // Reset initialization flag on error so we can try again
-        hasInitialized.current = false;
       }
     };
 
-    // Only run setup if we're still in the loading state
-    if (initialLoading) {
-      setupChat();
-    }
-  }, [characterId, sessionId, navigate, initialLoading]);
+    setupOrSwitchChat();
+  }, [characterId, sessionId, navigate]); // Remove initialLoading from dependencies
 
+  // Separate useEffect to handle URL parameter changes for chat switching
+  useEffect(() => {
+    // Reset loading state when switching to a different chat
+    if (sessionId !== currentSessionId.current) {
+      console.log(`Switching from ${currentSessionId.current} to ${sessionId}`);
+      // Don't set initialLoading to true here - let the main useEffect handle it
+    }
+  }, [sessionId]);
+
+  // Rest of the component remains the same...
   if (initialLoading) {
     return (
       <div className="chat-container">
