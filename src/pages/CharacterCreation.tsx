@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import './CharacterCreation.css';
 import Sidebar from '../components/Sidebar';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FirebaseService } from '../services/FirebaseService';
 import { CharacterService } from '../services/CharacterService';
@@ -78,6 +78,7 @@ type CharacterCreationState = {
   residence: string;
   job: string;
   appearance: string;
+  originalTags: string[];
   tags: string[];
   tagInput: string;
 
@@ -119,6 +120,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
       residence: initialData.residence || '',
       job: initialData.job || '',
       appearance: initialData.appearance || '',
+      originalTags: initialData.tags || [],
       tags: initialData.tags || [],
       tagInput: '',
 
@@ -277,6 +279,34 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           ...(avatarURL ? { avatar: avatarURL } : {})
         });
 
+        const characterId = this.props.characterId!;
+        const newTags = this.state.tags;
+        const oldTags = this.state.originalTags;
+
+        // Tags to add and remove
+        const addedTags = newTags.filter(tag => !oldTags.includes(tag));
+        const removedTags = oldTags.filter(tag => !newTags.includes(tag));
+
+        // Add new tags to global tag collection
+        for (const tag of addedTags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', characterId);
+          await setDoc(tagRef, { tagName: tag }, { merge: true });
+          await setDoc(tagCharRef, { id:this.props.initialData?.id });
+        }
+
+        // Remove tags from global tag collection
+        for (const tag of removedTags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', characterId);
+          await deleteDoc(tagCharRef);
+          const remaining = await getDocs(collection(tagRef, 'characters'));
+          if (remaining.empty) {
+            await deleteDoc(tagRef);
+            console.log(`Tag "${tag}" deleted because it had no more characters.`);
+          }
+        }
+
         this.setState({
           success: 'Character updated successfully!',
           loading: false
@@ -334,13 +364,13 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
         const charactersRef = collection(db, 'characters');
         const newCharacterRef = await addDoc(charactersRef, characterData);
         
-        // Add the tag to Firestore
+        // Add the tags to Firestore
         for (const tag of this.state.tags) {
           const tagRef = doc(db, 'tags', tag);
           const tagCharRef = doc(tagRef, 'characters', newCharacterRef.id);
         
           await setDoc(tagRef, { tagName: tag }, { merge: true });
-          await setDoc(tagCharRef, { addedAt: new Date() });
+          await setDoc(tagCharRef, { id: characterData.id });
         }
 
         // Upload avatar if provided
