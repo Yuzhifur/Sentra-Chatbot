@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { ChatService, Message } from '../services/ChatService';
 import { CharacterService } from '../services/CharacterService';
 import ChatTitleEditor from '../components/ChatTitleEditor';
+import ChatSettingsPopup from '../components/ChatSettingsPopup';
 import './Chat.css';
 import '../components/ChatTitleEditor.css';
 
@@ -182,6 +183,8 @@ type ChatState = {
   chatTitle: string;
   editingMessageIndex: number | null; // Track which message is being edited
   editingContent: string; // Content being edited
+  showSettingsPopup: boolean; // New: Show settings popup
+  currentTokenLimit: number;   // New: Current token limit setting
 };
 
 export class Chat extends Component<ChatProps, ChatState> {
@@ -201,6 +204,8 @@ export class Chat extends Component<ChatProps, ChatState> {
       chatTitle: props.initialChatTitle || 'Chat',
       editingMessageIndex: null,
       editingContent: '',
+      showSettingsPopup: false,        // New: Initialize settings popup state
+      currentTokenLimit: 1024,         // New: Initialize token limit
     };
     this.messagesEndRef = React.createRef();
   }
@@ -209,7 +214,11 @@ export class Chat extends Component<ChatProps, ChatState> {
     await this.loadChatData();
     await this.loadUserInfo();
     await this.loadCharacterInfo();
+    this.loadTokenLimit(); // New: Load token limit from localStorage
     this.scrollToBottom();
+
+    // New: Add event listener for token limit changes
+    window.addEventListener('tokenLimitChanged', this.handleTokenLimitChange);
   }
 
   componentDidUpdate(prevProps: ChatProps, prevState: ChatState) {
@@ -229,8 +238,40 @@ export class Chat extends Component<ChatProps, ChatState> {
     }
   }
 
+  componentWillUnmount() {
+    // New: Clean up event listener
+    window.removeEventListener('tokenLimitChanged', this.handleTokenLimitChange);
+  }
+
   scrollToBottom = () => {
     this.messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // New: Load token limit from localStorage
+  loadTokenLimit = () => {
+    const savedTokenLimit = localStorage.getItem('chatTokenLimit');
+    if (savedTokenLimit) {
+      const limit = parseInt(savedTokenLimit);
+      if ([256, 512, 1024].includes(limit)) {
+        this.setState({ currentTokenLimit: limit });
+      }
+    }
+  };
+
+  // New: Handle token limit changes from settings popup
+  handleTokenLimitChange = (event: any) => {
+    const newTokenLimit = event.detail.tokenLimit;
+    this.setState({ currentTokenLimit: newTokenLimit });
+  };
+
+  // New: Handle settings button click
+  handleSettingsClick = () => {
+    this.setState({ showSettingsPopup: true });
+  };
+
+  // New: Handle closing settings popup
+  handleCloseSettings = () => {
+    this.setState({ showSettingsPopup: false });
   };
 
   loadChatData = async () => {
@@ -293,7 +334,7 @@ export class Chat extends Component<ChatProps, ChatState> {
   handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const { input, isLoading } = this.state;
+    const { input, isLoading, currentTokenLimit } = this.state;
     const trimmedInput = input.trim();
 
     if (!trimmedInput || isLoading) {
@@ -309,8 +350,8 @@ export class Chat extends Component<ChatProps, ChatState> {
       // Reload messages to get the updated chat
       await this.loadChatData();
 
-      // Generate AI response
-      await ChatService.generateResponse(this.props.chatId);
+      // Generate AI response with current token limit
+      await ChatService.generateResponse(this.props.chatId, currentTokenLimit);
 
       // Reload messages again to get the AI response
       await this.loadChatData();
@@ -339,7 +380,7 @@ export class Chat extends Component<ChatProps, ChatState> {
   };
 
   handleConfirmEdit = async () => {
-    const { editingMessageIndex, editingContent, messages } = this.state;
+    const { editingMessageIndex, editingContent, currentTokenLimit } = this.state;
 
     if (editingMessageIndex === null || !editingContent.trim()) {
       return;
@@ -364,8 +405,8 @@ export class Chat extends Component<ChatProps, ChatState> {
       // Reload messages to get the updated chat
       await this.loadChatData();
 
-      // Generate AI response to the modified message
-      await ChatService.generateResponse(this.props.chatId);
+      // Generate AI response to the modified message with current token limit
+      await ChatService.generateResponse(this.props.chatId, currentTokenLimit);
 
       // Reload messages again to get the AI response
       await this.loadChatData();
@@ -401,7 +442,9 @@ export class Chat extends Component<ChatProps, ChatState> {
       userName,
       chatTitle,
       editingMessageIndex,
-      editingContent
+      editingContent,
+      showSettingsPopup,
+      currentTokenLimit
     } = this.state;
 
     return (
@@ -440,6 +483,15 @@ export class Chat extends Component<ChatProps, ChatState> {
                 />
               </div>
             </div>
+            
+            {/* New: Settings Button */}
+            <button
+              className="chat-settings-button"
+              onClick={this.handleSettingsClick}
+              title={`Chat Settings (Current: ${currentTokenLimit} tokens)`}
+            >
+              ⚙️
+            </button>
           </div>
 
           {error && <div className="chat-error">{error}</div>}
@@ -548,6 +600,11 @@ export class Chat extends Component<ChatProps, ChatState> {
             </button>
           </form>
         </div>
+
+        {/* New: Chat Settings Popup */}
+        {showSettingsPopup && (
+          <ChatSettingsPopup onClose={this.handleCloseSettings} />
+        )}
       </div>
     );
   }

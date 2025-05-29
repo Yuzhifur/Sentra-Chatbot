@@ -34,7 +34,7 @@ export interface ChatData {
   userId: string;
   userUsername: string;
   history: string;
-  scenario: string;  // NEW: Custom scenario for this chat
+  scenario: string;  // Custom scenario for this chat
   title?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -98,7 +98,7 @@ export class ChatService {
         userId: currentUser.uid,
         userUsername: userData.username || userData.displayName || 'User',
         history: JSON.stringify(emptyHistory),
-        scenario: scenarioToUse,  // NEW: Store the scenario for this chat
+        scenario: scenarioToUse,  // Store the scenario for this chat
         title: defaultTitle,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
@@ -378,10 +378,10 @@ export class ChatService {
   }
 
   /**
-   * Generate AI response in chat
-   * Now passes the chat's custom scenario to the AI
+   * Generate AI response in chat with custom token limit
+   * Now passes the chat's custom scenario and token limit to the AI
    */
-  static async generateResponse(chatId: string): Promise<Message> {
+  static async generateResponse(chatId: string, tokenLimit?: number): Promise<Message> {
     try {
       // Get chat session (includes custom scenario)
       const chatData = await this.getChatSession(chatId);
@@ -399,17 +399,27 @@ export class ChatService {
       // Get current messages
       const messages = await this.getChatMessages(chatId);
 
+      // Get token limit from localStorage if not provided, or use parameter
+      let finalTokenLimit = tokenLimit;
+      if (!finalTokenLimit) {
+        const savedTokenLimit = this.getCurrentTokenLimit();
+        finalTokenLimit = savedTokenLimit;
+      }
+
       // Generate AI response
       const functions = getFunctions();
       const processChatFunction = httpsCallable(functions, 'processChat');
 
-      // Prepare data for the cloud function - include the chat's custom scenario
+      // Prepare data for the cloud function - include custom scenario and token limit
       const functionData = {
         messages: messages,
         characterId: chatData.characterId,
         sessionId: chatId,
-        customScenario: chatData.scenario  // NEW: Pass custom scenario
+        customScenario: chatData.scenario,  // Pass custom scenario
+        tokenLimit: finalTokenLimit         // Pass token limit
       };
+
+      console.log(`Generating response with ${finalTokenLimit} token limit`);
 
       // Call the cloud function
       const result = await processChatFunction(functionData);
@@ -541,6 +551,67 @@ export class ChatService {
     } catch (error) {
       console.error("Error getting character chat history:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Utility method to get current token limit setting
+   */
+  static getCurrentTokenLimit(): number {
+    try {
+      const savedTokenLimit = localStorage.getItem('chatTokenLimit');
+      if (savedTokenLimit) {
+        const limit = parseInt(savedTokenLimit);
+        if ([256, 512, 1024].includes(limit)) {
+          return limit;
+        }
+      }
+    } catch (error) {
+      console.warn('Error reading token limit from localStorage:', error);
+    }
+    return 1024; // Default
+  }
+
+  /**
+   * Utility method to set token limit setting
+   */
+  static setTokenLimit(tokenLimit: number): void {
+    if ([256, 512, 1024].includes(tokenLimit)) {
+      try {
+        localStorage.setItem('chatTokenLimit', tokenLimit.toString());
+        // Dispatch event to notify components
+        window.dispatchEvent(new CustomEvent('tokenLimitChanged', {
+          detail: { tokenLimit }
+        }));
+        console.log(`Token limit updated to ${tokenLimit}`);
+      } catch (error) {
+        console.error('Error saving token limit to localStorage:', error);
+      }
+    } else {
+      console.warn(`Invalid token limit: ${tokenLimit}. Must be 256, 512, or 1024.`);
+    }
+  }
+
+  /**
+   * Utility method to get available token limit options
+   */
+  static getAvailableTokenLimits(): number[] {
+    return [256, 512, 1024];
+  }
+
+  /**
+   * Utility method to get token limit description
+   */
+  static getTokenLimitDescription(limit: number): string {
+    switch (limit) {
+      case 256:
+        return "Short responses - Quick and concise replies";
+      case 512:
+        return "Medium responses - Balanced length and detail";
+      case 1024:
+        return "Long responses - Detailed and comprehensive replies";
+      default:
+        return "Unknown token limit";
     }
   }
 }

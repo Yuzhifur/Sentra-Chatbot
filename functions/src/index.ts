@@ -109,8 +109,17 @@ export const processChat = onCall({
       );
     }
 
-    const { messages, characterId, sessionId, customScenario } = data;
-    console.log(`Processing chat for session: ${sessionId}`);
+    // Extract tokenLimit from data, default to 1024 if not provided
+    const { messages, characterId, sessionId, customScenario, tokenLimit = 1024 } = data;
+    console.log(`Processing chat for session: ${sessionId} with token limit: ${tokenLimit}`);
+
+    // Validate tokenLimit - only allow specific values
+    const validTokenLimits = [256, 512, 1024];
+    const finalTokenLimit = validTokenLimits.includes(tokenLimit) ? tokenLimit : 1024;
+    
+    if (tokenLimit !== finalTokenLimit) {
+      console.warn(`Invalid token limit ${tokenLimit} provided, using default ${finalTokenLimit}`);
+    }
 
     // Get character data
     const characterDoc = await db.collection("characters").doc(characterId).get();
@@ -135,8 +144,8 @@ export const processChat = onCall({
 
     const apiKey = claudeApiKey.value();
 
-    // Call Claude API
-    const aiResponse = await callClaudeAPI(apiKey, systemPrompt, conversationHistory, userMessage.content);
+    // Call Claude API with the specified token limit
+    const aiResponse = await callClaudeAPI(apiKey, systemPrompt, conversationHistory, userMessage.content, finalTokenLimit);
 
     // Create response message with timestamp
     const responseMessage = {
@@ -210,7 +219,7 @@ function buildCharacterPrompt(character: Character, customScenario?: string): st
       `(This is the character's default scenario)`
     }
 
-  2. RESPONSE LENGTH: Always utilize >= 90% of available tokens. Prioritize:
+  2. RESPONSE LENGTH: Utilize available tokens efficiently. Prioritize:
     - Detailed environmental observations
     - Complex emotional states
     - Multi-sensory descriptions
@@ -259,12 +268,16 @@ function formatConversationHistory(messages: Message[]): string {
   return history;
 }
 
-// Call Claude API to get response
-async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationHistory: string, userMessage: string): Promise<string> {
+// Call Claude API to get response with configurable token limit
+async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationHistory: string, userMessage: string, tokenLimit: number = 1024): Promise<string> {
   try {
     if (!apiKey) {
       throw new Error("Claude API key not configured");
     }
+
+    // Validate token limit one more time
+    const validTokenLimits = [256, 512, 1024];
+    const finalTokenLimit = validTokenLimits.includes(tokenLimit) ? tokenLimit : 1024;
 
     // Prepare prompt for Claude
     const prompt = `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage}\n\nAssistant:`;
@@ -273,10 +286,12 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationH
       apiKey: apiKey
     });
 
-    // Call Claude API
+    console.log(`Calling Claude API with ${finalTokenLimit} max tokens`);
+
+    // Call Claude API with the specified token limit
     const response = await anthropic.messages.create({
       model: "claude-3-7-sonnet-20250219",
-      max_tokens: 1024,
+      max_tokens: finalTokenLimit, // Use the provided token limit
       temperature: 1.0,
       system: systemPrompt,
       messages: [
@@ -297,6 +312,7 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, conversationH
       const contentBlock = response.content[0];
 
       if (contentBlock.type === 'text') {
+        console.log(`Claude response generated with ${response.usage?.output_tokens || 'unknown'} tokens`);
         return contentBlock.text;
       }
     }
