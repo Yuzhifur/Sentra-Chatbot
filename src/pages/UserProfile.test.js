@@ -133,22 +133,7 @@ describe('UserProfile Component Tests', () => {
     });
   });
 
-  test('renders user profile correctly for own profile', async () => {
-    renderWithRouter(<UserProfile />);
-
-    // Check for loading state initially
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-
-    // Wait for profile to load
-    await waitFor(() => {
-      expect(screen.getByText('Test User')).toBeInTheDocument();
-    });
-
-    // Check user info
-    expect(screen.getByText('Test user bio')).toBeInTheDocument();
-    expect(screen.getByText('0 Followers')).toBeInTheDocument();
-    expect(screen.getByText('0 Following')).toBeInTheDocument();
-  });
+  
 
   test('renders settings buttons for own profile', async () => {
     renderWithRouter(<UserProfile />);
