@@ -75,3 +75,6 @@ public/
 .idea/
 
 .DS_Store
+
+src/CFM.md
+src/services/FirebaseService.friends.test.js

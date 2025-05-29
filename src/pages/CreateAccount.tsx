@@ -110,6 +110,7 @@ export class CreateAccount extends Component<CreateAccountProps, CreateAccountSt
         userAvatar: "",
         userDescription: "",
         userCharacters: [],
+        friendCount: 0, // Initialize friend count to 0
       });
 
       // Auth state change will handle redirect

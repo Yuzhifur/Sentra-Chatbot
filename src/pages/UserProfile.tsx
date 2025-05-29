@@ -7,6 +7,7 @@ import { FirebaseService } from '../services/FirebaseService';
 import './UserProfile.css';
 import CharacterChatPopup from '../components/CharacterChatPopup';
 import { collection, getFirestore } from 'firebase/firestore';
+import { FriendData } from '../services/FirebaseService';
 
 type UserData = {
   username: string;
@@ -32,11 +33,16 @@ const UserProfile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isOwnProfile, setIsOwnProfile] = useState<boolean>(false);
   const [showSettingsPopup, setShowSettingsPopup] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'characters' | 'liked'>('characters');
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
   const [characterForChat, setCharacterForChat] = useState<{id: string, name: string} | null>(null);
+  const [activeTab, setActiveTab] = useState<'characters' | 'liked' | 'friends'>('characters');
+  const [friends, setFriends] = useState<FriendData[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendData[]>([]);
+  const [friendshipStatus, setFriendshipStatus] = useState<'friends' | 'pending' | 'none'>('none');
+  const [friendCount, setFriendCount] = useState<number>(0);
+  const [isProcessingFriend, setIsProcessingFriend] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -119,6 +125,109 @@ const UserProfile: React.FC = () => {
 
     fetchCharacters();
   }, [userData, isOwnProfile]);
+
+  useEffect(() => {
+    const fetchFriendsData = async () => {
+      if (!userData) return;
+
+      try {
+        // Get friend count
+        const auth = getAuth();  // modify
+        const count = await FirebaseService.getFriendCount(userId || (isOwnProfile ? auth.currentUser?.uid : ''));
+        setFriendCount(count);
+
+        // If viewing own profile, get friends and requests
+        if (isOwnProfile) {
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const { friends, pendingRequests } = await FirebaseService.getFriendsAndRequests(currentUser.uid);
+            setFriends(friends);
+            setPendingRequests(pendingRequests);
+          }
+        } else if (userId) {
+          // If viewing another user's profile, check friendship status
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const status = await FirebaseService.checkFriendshipStatus(currentUser.uid, userId);
+            setFriendshipStatus(status);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching friends data:", error);
+      }
+    };
+
+    fetchFriendsData();
+  }, [userData, userId, isOwnProfile]);
+
+  // Add friend management functions
+  const handleSendFriendRequest = async () => {
+    if (!userId || isProcessingFriend) return;
+
+    try {
+      setIsProcessingFriend(true);
+      await FirebaseService.sendFriendRequest(userId);
+      setFriendshipStatus('pending');
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      alert(error instanceof Error ? error.message : 'Failed to send friend request');
+    } finally {
+      setIsProcessingFriend(false);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!userId || isProcessingFriend) return;
+
+    const confirmed = window.confirm('Are you sure you want to remove this friend?');
+    if (!confirmed) return;
+
+    try {
+      setIsProcessingFriend(true);
+      await FirebaseService.removeFriend(userId);
+      setFriendshipStatus('none');
+      setFriendCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      alert(error instanceof Error ? error.message : 'Failed to remove friend');
+    } finally {
+      setIsProcessingFriend(false);
+    }
+  };
+
+  const handleAcceptFriendRequest = async (requesterId: string) => {
+    try {
+      await FirebaseService.acceptFriendRequest(requesterId);
+
+      // Move from pending to friends
+      const acceptedRequest = pendingRequests.find(req => req.userId === requesterId);
+      if (acceptedRequest) {
+        acceptedRequest.pending = false;
+        setFriends(prev => [...prev, acceptedRequest]);
+        setPendingRequests(prev => prev.filter(req => req.userId !== requesterId));
+        setFriendCount(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      alert(error instanceof Error ? error.message : 'Failed to accept friend request');
+    }
+  };
+
+  const handleDeclineFriendRequest = async (requesterId: string) => {
+    try {
+      await FirebaseService.declineFriendRequest(requesterId);
+      setPendingRequests(prev => prev.filter(req => req.userId !== requesterId));
+    } catch (error) {
+      console.error("Error declining friend request:", error);
+      alert(error instanceof Error ? error.message : 'Failed to decline friend request');
+    }
+  };
+
+  const handleFriendClick = (friendId: string) => {
+    navigate(`/profile/${friendId}`);
+  };
 
   const handleLogout = async () => {
     try {
@@ -241,10 +350,35 @@ const UserProfile: React.FC = () => {
         {/* Username */}
         <h1 className="user-username">{userData?.displayName || userData?.username || 'User'}</h1>
 
-        {/* Stats */}
+        {/* Stats - Modified to show friend count and Add/Remove friend button */}
         <div className="user-stats">
-          <span>0 Followers</span> |
-          <span>0 Following</span>
+          <span>{friendCount} Friends</span>
+          {!isOwnProfile && userData && (
+            <>
+              <span>|</span>
+              <span>{userData.username}</span>
+              <span>|</span>
+              {friendshipStatus === 'friends' ? (
+                <button
+                  className="friend-action-button remove"
+                  onClick={handleRemoveFriend}
+                  disabled={isProcessingFriend}
+                >
+                  Remove Friend
+                </button>
+              ) : friendshipStatus === 'pending' ? (
+                <span className="friend-pending">Request Pending</span>
+              ) : (
+                <button
+                  className="friend-action-button add"
+                  onClick={handleSendFriendRequest}
+                  disabled={isProcessingFriend}
+                >
+                  Add Friend
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         {/* Bio */}
@@ -285,6 +419,14 @@ const UserProfile: React.FC = () => {
           >
             Liked
           </button>
+          {isOwnProfile && (
+            <button
+              className={`user-tab ${activeTab === 'friends' ? 'active' : ''}`}
+              onClick={() => setActiveTab('friends')}
+            >
+              Friends
+            </button>
+          )}
         </div>
 
         {/* Tab Content */}
@@ -350,6 +492,84 @@ const UserProfile: React.FC = () => {
           {activeTab === 'liked' && (
             <div className="user-empty-state">
               {isOwnProfile ? "You haven't liked any Characters yet." : "This user hasn't liked any Characters yet."}
+            </div>
+          )}
+
+          {activeTab === 'friends' && isOwnProfile && (
+            <div className="user-friends-section">
+              {/* Pending Friend Requests */}
+              {pendingRequests.length > 0 && (
+                <div className="friend-requests-section">
+                  <h3 className="section-subtitle">Friend Requests</h3>
+                  <div className="friend-requests-list">
+                    {pendingRequests.map((request) => (
+                      <div key={request.userId} className="friend-request-item">
+                        <div className="friend-info" onClick={() => handleFriendClick(request.userId)}>
+                          <div className="friend-avatar">
+                            {request.userAvatar ? (
+                              <img src={request.userAvatar} alt={request.userDisplayName} />
+                            ) : (
+                              request.userDisplayName.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div className="friend-details">
+                            <div className="friend-display-name">{request.userDisplayName}</div>
+                            <div className="friend-username">@{request.userUsername}</div>
+                          </div>
+                        </div>
+                        <div className="friend-request-actions">
+                          <button
+                            className="friend-accept-btn"
+                            onClick={() => handleAcceptFriendRequest(request.userId)}
+                            title="Accept friend request"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="friend-decline-btn"
+                            onClick={() => handleDeclineFriendRequest(request.userId)}
+                            title="Decline friend request"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Friends List */}
+              <div className="friends-list-section">
+                <h3 className="section-subtitle">Friends ({friends.length})</h3>
+                {friends.length > 0 ? (
+                  <div className="friends-list">
+                    {friends.map((friend) => (
+                      <div
+                        key={friend.userId}
+                        className="friend-item"
+                        onClick={() => handleFriendClick(friend.userId)}
+                      >
+                        <div className="friend-avatar">
+                          {friend.userAvatar ? (
+                            <img src={friend.userAvatar} alt={friend.userDisplayName} />
+                          ) : (
+                            friend.userDisplayName.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="friend-details">
+                          <div className="friend-display-name">{friend.userDisplayName}</div>
+                          <div className="friend-username">@{friend.userUsername}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="user-empty-state">
+                    You haven't added any friends yet.
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
