@@ -31,6 +31,7 @@ interface CharacterResult extends BaseSearchResult {
   authorDisplayName: string;
   characterDescription: string;
   docId: string; // Add docId for consistency with home.tsx
+  tags: string[];
 }
 
 // Union type for all possible search results
@@ -124,6 +125,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             avatar: charData.avatar || "",
             authorDisplayName: charData.authorDisplayName || "Unknown",
             characterDescription: charData.characterDescription || "",
+            tags: charData.tags || [],
           });
         });
       }
@@ -150,6 +152,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             avatar: charData.avatar || "",
             authorDisplayName: charData.authorDisplayName || "Unknown",
             characterDescription: charData.characterDescription || "",
+            tags: charData.tags || [],
           });
         }
       });
@@ -278,6 +281,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <br />
             <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
             <br />
+            <p><strong>Tags:</strong>{" "}
+            {selectedCharacter.tags && selectedCharacter.tags.length > 0
+              ? selectedCharacter.tags.map(tag => `${tag}`).join(", ")
+              : "No tags provided."}
+            </p>
             {selectedCharacter.avatar && (
               <img src={selectedCharacter.avatar} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
             )}

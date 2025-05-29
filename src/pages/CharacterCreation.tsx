@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import './CharacterCreation.css';
 import Sidebar from '../components/Sidebar';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, getDocs, increment } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FirebaseService } from '../services/FirebaseService';
 import { CharacterService } from '../services/CharacterService';
@@ -78,6 +78,9 @@ type CharacterCreationState = {
   residence: string;
   job: string;
   appearance: string;
+  originalTags: string[];
+  tags: string[];
+  tagInput: string;
 
   // Personality
   temperament: string;
@@ -117,6 +120,9 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
       residence: initialData.residence || '',
       job: initialData.job || '',
       appearance: initialData.appearance || '',
+      originalTags: initialData.tags || [],
+      tags: initialData.tags || [],
+      tagInput: '',
 
       // Personality
       temperament: initialData.temperament || '',
@@ -201,6 +207,29 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
     return downloadURL;
   };
 
+  // methods for hangling tags:
+  handleTagInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const filtered = e.target.value.replace(/[#,]/g, "");
+    this.setState({ tagInput: filtered });
+  };
+  
+  handleAddTag = () => {
+    const newTag = this.state.tagInput.trim().toLowerCase();
+  
+    if (!newTag || this.state.tags.includes(newTag)) return;
+  
+    this.setState(prev => ({
+      tags: [...prev.tags, newTag],
+      tagInput: ''
+    }));
+  };
+  
+  handleRemoveTag = (tagToRemove: string) => {
+    this.setState(prev => ({
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };  
+
   doSubmitClick = async (_evt: MouseEvent<HTMLButtonElement>): Promise<void> => {
     if (!this.validateForm()) return;
 
@@ -246,8 +275,43 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           specialAbility: this.state.specialAbility || '',
           scenario: this.state.scenario || '',
           outfit: this.state.outfit || '',
+          tags: this.state.tags,
           ...(avatarURL ? { avatar: avatarURL } : {})
         });
+
+        const characterId = this.props.characterId!;
+        const newTags = this.state.tags;
+        const oldTags = this.state.originalTags;
+
+        // Tags to add and remove
+        const addedTags = newTags.filter(tag => !oldTags.includes(tag));
+        const removedTags = oldTags.filter(tag => !newTags.includes(tag));
+
+        // Add new tags to global tag collection
+        for (const tag of addedTags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', characterId);
+          await setDoc(tagRef, {
+            tagName: tag,
+            characterCount: increment(1)
+          }, { merge: true });
+          await setDoc(tagCharRef, { id:this.props.initialData?.id });
+        }
+
+        // Remove tags from global tag collection
+        for (const tag of removedTags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', characterId);
+          await deleteDoc(tagCharRef);
+          await updateDoc(tagRef, {
+            characterCount: increment(-1)
+          });
+          const remaining = await getDocs(collection(tagRef, 'characters'));
+          if (remaining.empty) {
+            await deleteDoc(tagRef);
+            console.log(`Tag "${tag}" deleted because it had no more characters.`);
+          }
+        }
 
         this.setState({
           success: 'Character updated successfully!',
@@ -280,6 +344,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           residence: this.state.residence || '',
           job: this.state.job || '',
           appearance: this.state.appearance || '',
+          tags: this.state.tags || '',
 
           // Personality
           temperament: this.state.temperament,
@@ -304,6 +369,18 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
         // Add character to Firestore
         const charactersRef = collection(db, 'characters');
         const newCharacterRef = await addDoc(charactersRef, characterData);
+        
+        // Add the tags to Firestore
+        for (const tag of this.state.tags) {
+          const tagRef = doc(db, 'tags', tag);
+          const tagCharRef = doc(tagRef, 'characters', newCharacterRef.id);
+        
+          await setDoc(tagRef, {
+            tagName: tag,
+            characterCount: increment(1)
+          }, { merge: true });
+          await setDoc(tagCharRef, { id: characterData.id });
+        }
 
         // Upload avatar if provided
         let avatarURL = '';
@@ -507,6 +584,28 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                     onChange={this.handleInputChange}
                     placeholder="Physical description of the character..."
                   />
+                </div>
+
+                <div className="form-group">
+                  <label>Tags:</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      value={this.state.tagInput}
+                      onChange={this.handleTagInputChange}
+                      placeholder="Enter a tag"
+                    />
+                    <button type="button" onClick={this.handleAddTag}>Add</button>
+                  </div>
+
+                  <div className="tag-chip-container">
+                    {this.state.tags.map(tag => (
+                      <span key={tag} className="tag-chip">
+                        #{tag}
+                        <button onClick={() => this.handleRemoveTag(tag)}>×</button>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

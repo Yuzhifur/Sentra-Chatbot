@@ -21,7 +21,7 @@ import {
   Timestamp,
   deleteDoc,
   writeBatch,
-  increment
+  increment,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -256,7 +256,33 @@ export class FirebaseService {
       const db = getFirestore();
 
       // 1. Delete the character document from Firestore
-      await deleteDoc(doc(db, 'characters', characterId));
+      const characterRef = doc(db, 'characters', characterId);
+      const characterSnap = await getDoc(characterRef);
+
+      if (!characterSnap.exists()) {
+        throw new Error("Character not found.");
+      }
+
+      const characterData = characterSnap.data();
+      const tags: string[] = characterData.tags || [];
+
+      // Remove characterId from each tag's subcollection
+      for (const tag of tags) {
+        const tagRef = doc(db, 'tags', tag);
+        const tagCharRef = doc(tagRef, 'characters', characterId);
+        await deleteDoc(tagCharRef);
+        await updateDoc(tagRef, {
+          characterCount: increment(-1)
+        });
+        const remaining = await getDocs(collection(tagRef, 'characters'));
+        if (remaining.empty) {
+          await deleteDoc(tagRef);
+          console.log(`Tag "${tag}" deleted because it had no more characters.`);
+        }
+      }
+
+      // Delete the character document
+      await deleteDoc(characterRef);
 
       // 2. Remove the characterId from user's userCharacters array
       const userRef = doc(db, 'users', userId);
