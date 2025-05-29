@@ -1,0 +1,216 @@
+/* src/components/ChatSettingsPopup.css */
+.chat-settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.chat-settings-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.chat-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-settings-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.chat-settings-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.chat-settings-close:hover {
+  background-color: #f3f4f6;
+  color: #f44336;
+}
+
+.chat-settings-body {
+  padding: 20px 24px;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.settings-section-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.token-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.token-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #ffffff;
+}
+
+.token-option:hover {
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+}
+
+.token-option.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.token-option-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.token-option-radio {
+  display: flex;
+  align-items: center;
+}
+
+.token-option-radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.token-option-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.token-option-description {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin-left: 28px;
+}
+
+.token-option.selected .token-option-title {
+  color: #1e40af;
+}
+
+.token-option.selected .token-option-description {
+  color: #3730a3;
+}
+
+.chat-settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+.settings-button {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  min-width: 80px;
+}
+
+.settings-button.cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.settings-button.cancel:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.settings-button.save {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.settings-button.save:hover {
+  background-color: #2563eb;
+}
+
+.settings-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .chat-settings-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .chat-settings-header,
+  .chat-settings-body,
+  .chat-settings-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .chat-settings-footer {
+    flex-direction: column;
+  }
+  
+  .settings-button {
+    width: 100%;
+  }
+  
+  .token-option-description {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
