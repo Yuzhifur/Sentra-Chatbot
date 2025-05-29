@@ -19,9 +19,20 @@ import {
   serverTimestamp,
   CollectionReference,
   Timestamp,
-  deleteDoc
+  deleteDoc,
+  writeBatch,
+  increment
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+export interface FriendData {
+  userId: string;
+  userUsername: string;
+  userDisplayName: string;
+  userAvatar: string;
+  pending: boolean;
+  createdAt?: any;
+}
 
 export interface UserData {
   username: string;
@@ -30,6 +41,7 @@ export interface UserData {
   userAvatar: string;
   userDescription: string;
   userCharacters: string[];
+  friendCount?: number; // Add this field
   createdAt?: any; // FirebaseTimestamp
   lastLogin?: any; // FirebaseTimestamp
 }
@@ -75,9 +87,10 @@ export class FirebaseService {
       userData.username = userData.username.toLowerCase();
     }
 
-    // Create the main user document
+    // Create the main user document with friendCount defaulting to 0
     await setDoc(doc(db, "users", userId), {
       ...userData,
+      friendCount: userData.friendCount || 0, // Initialize friend count
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp()
     });
@@ -238,7 +251,7 @@ export class FirebaseService {
   }
 
   static async deleteCharacter(userId: string, characterId: string): Promise<void> {
-    console.log("userId: " + userId + " characterId: " + characterId) 
+    console.log("userId: " + userId + " characterId: " + characterId)
     try {
       const db = getFirestore();
 
@@ -300,5 +313,298 @@ export class FirebaseService {
     // Upload the file to Firebase Storage
     await uploadBytes(storageRef, file);
     return storageRef;
+  }
+
+  /**
+   * Send a friend request to another user
+   */
+  static async sendFriendRequest(targetUserId: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to send friend requests');
+      }
+
+      if (currentUser.uid === targetUserId) {
+        throw new Error('You cannot add yourself as a friend');
+      }
+
+      // Get current user's data
+      const currentUserData = await this.getUserData(currentUser.uid);
+      if (!currentUserData) {
+        throw new Error('Unable to fetch your user data');
+      }
+
+      // Check if friendship already exists
+      const db = getFirestore();
+      const existingFriendDoc = await getDoc(doc(db, "users", targetUserId, "friends", currentUser.uid));
+
+      if (existingFriendDoc.exists()) {
+        const data = existingFriendDoc.data();
+        if (data.pending) {
+          throw new Error('Friend request already sent');
+        } else {
+          throw new Error('You are already friends');
+        }
+      }
+
+      // Create friend request document in target user's friends collection
+      const friendRequestData: FriendData = {
+        userId: currentUser.uid,
+        userUsername: currentUserData.username,
+        userDisplayName: currentUserData.displayName || currentUserData.username,
+        userAvatar: currentUserData.userAvatar || '',
+        pending: true,
+        createdAt: serverTimestamp()
+      };
+
+      await setDoc(
+        doc(db, "users", targetUserId, "friends", currentUser.uid),
+        friendRequestData
+      );
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Accept a friend request
+   */
+  static async acceptFriendRequest(requesterId: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to accept friend requests');
+      }
+
+      const db = getFirestore();
+
+      // Get the pending request
+      const requestDoc = await getDoc(doc(db, "users", currentUser.uid, "friends", requesterId));
+
+      if (!requestDoc.exists()) {
+        throw new Error('Friend request not found');
+      }
+
+      const requestData = requestDoc.data();
+      if (!requestData.pending) {
+        throw new Error('This is not a pending friend request');
+      }
+
+      // Get current user's data
+      const currentUserData = await this.getUserData(currentUser.uid);
+      if (!currentUserData) {
+        throw new Error('Unable to fetch your user data');
+      }
+
+      // Start a batch write
+      const batch = writeBatch(db);
+
+      // Update the request to accepted in current user's friends
+      batch.update(doc(db, "users", currentUser.uid, "friends", requesterId), {
+        pending: false
+      });
+
+      // Add current user to requester's friends
+      const reciprocalFriendData: FriendData = {
+        userId: currentUser.uid,
+        userUsername: currentUserData.username,
+        userDisplayName: currentUserData.displayName || currentUserData.username,
+        userAvatar: currentUserData.userAvatar || '',
+        pending: false,
+        createdAt: serverTimestamp()
+      };
+
+      batch.set(
+        doc(db, "users", requesterId, "friends", currentUser.uid),
+        reciprocalFriendData
+      );
+
+      // Update friend counts
+      batch.update(doc(db, "users", currentUser.uid), {
+        friendCount: increment(1)
+      });
+
+      batch.update(doc(db, "users", requesterId), {
+        friendCount: increment(1)
+      });
+
+      // Commit the batch
+      await batch.commit();
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decline a friend request
+   */
+  static async declineFriendRequest(requesterId: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to decline friend requests');
+      }
+
+      const db = getFirestore();
+
+      // Verify the request exists and is pending
+      const requestDoc = await getDoc(doc(db, "users", currentUser.uid, "friends", requesterId));
+
+      if (!requestDoc.exists()) {
+        throw new Error('Friend request not found');
+      }
+
+      const requestData = requestDoc.data();
+      if (!requestData.pending) {
+        throw new Error('This is not a pending friend request');
+      }
+
+      // Delete the friend request
+      await deleteDoc(doc(db, "users", currentUser.uid, "friends", requesterId));
+    } catch (error) {
+      console.error("Error declining friend request:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a friend
+   */
+  static async removeFriend(friendUserId: string): Promise<void> {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to remove friends');
+      }
+
+      const db = getFirestore();
+
+      // Verify friendship exists
+      const friendDoc = await getDoc(doc(db, "users", currentUser.uid, "friends", friendUserId));
+
+      if (!friendDoc.exists() || friendDoc.data().pending) {
+        throw new Error('Not friends with this user');
+      }
+
+      // Start a batch write
+      const batch = writeBatch(db);
+
+      // Remove from both users' friends lists
+      batch.delete(doc(db, "users", currentUser.uid, "friends", friendUserId));
+      batch.delete(doc(db, "users", friendUserId, "friends", currentUser.uid));
+
+      // Update friend counts
+      batch.update(doc(db, "users", currentUser.uid), {
+        friendCount: increment(-1)
+      });
+
+      batch.update(doc(db, "users", friendUserId), {
+        friendCount: increment(-1)
+      });
+
+      // Commit the batch
+      await batch.commit();
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all friends and pending requests for a user
+   */
+  static async getFriendsAndRequests(userId: string): Promise<{
+    friends: FriendData[],
+    pendingRequests: FriendData[]
+  }> {
+    try {
+      const db = getFirestore();
+      const friendsRef = collection(db, "users", userId, "friends");
+
+      const querySnapshot = await getDocs(friendsRef);
+
+      const friends: FriendData[] = [];
+      const pendingRequests: FriendData[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as FriendData;
+        data.userId = doc.id; // Ensure userId is set
+
+        if (data.pending) {
+          pendingRequests.push(data);
+        } else {
+          friends.push(data);
+        }
+      });
+
+      // Sort by creation date (newest first for requests, alphabetical for friends)
+      pendingRequests.sort((a, b) => {
+        const timeA = a.createdAt?.toDate?.() || new Date(0);
+        const timeB = b.createdAt?.toDate?.() || new Date(0);
+        return timeB.getTime() - timeA.getTime();
+      });
+
+      friends.sort((a, b) =>
+        (a.userDisplayName || a.userUsername).localeCompare(b.userDisplayName || b.userUsername)
+      );
+
+      return { friends, pendingRequests };
+    } catch (error) {
+      console.error("Error fetching friends and requests:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check friendship status between two users
+   */
+  static async checkFriendshipStatus(userId1: string, userId2: string): Promise<'friends' | 'pending' | 'none'> {
+    try {
+      const db = getFirestore();
+
+      // Check if userId2 is in userId1's friends
+      const friendDoc = await getDoc(doc(db, "users", userId1, "friends", userId2));
+
+      if (friendDoc.exists()) {
+        const data = friendDoc.data();
+        return data.pending ? 'pending' : 'friends';
+      }
+
+      // Check if there's a pending request from userId1 to userId2
+      const reverseDoc = await getDoc(doc(db, "users", userId2, "friends", userId1));
+
+      if (reverseDoc.exists() && reverseDoc.data().pending) {
+        return 'pending';
+      }
+
+      return 'none';
+    } catch (error) {
+      console.error("Error checking friendship status:", error);
+      return 'none';
+    }
+  }
+
+  /**
+   * Get friend count for a user
+   */
+  static async getFriendCount(userId: string): Promise<number> {
+    try {
+      const userData = await this.getUserData(userId);
+      return userData?.friendCount || 0;
+    } catch (error) {
+      console.error("Error getting friend count:", error);
+      return 0;
+    }
   }
 }

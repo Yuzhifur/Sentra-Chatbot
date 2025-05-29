@@ -1,4 +1,4 @@
-# Sentra: Immersive AI Roleplay Chatbots V1.0.3
+# Sentra: Immersive AI Roleplay Chatbots V1.1.0
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
@@ -65,8 +65,17 @@ Firestore Database
 │       ├── userAvatar: string        # URL or data for user's avatar image
 │       ├── userDescription: string   # User's self-description/bio
 │       ├── userCharacters: string[]  # Array of character IDs created by this user
+│       ├── friendCount: number       # Number of accepted friends (for performance)
 │       ├── createdAt: timestamp      # When the user account was created
 │       ├── lastLogin: timestamp      # When the user last logged in
+│       │
+│       ├── friends/                  # Subcollection for friends and friend requests
+│       │   └── {friendUserId}/       # Friend/request document (ID is the other user's ID)
+│       │       ├── userUsername: string      # Friend's username
+│       │       ├── userDisplayName: string   # Friend's display name
+│       │       ├── userAvatar: string        # Friend's avatar URL
+│       │       ├── pending: boolean          # true if invite, false if accepted
+│       │       └── createdAt: timestamp      # When friend was added/requested
 │       │
 │       └── chatHistory/              # Subcollection for chat history
 │           └── {chatId}/             # Individual chat document in history
@@ -148,7 +157,7 @@ Firestore Database
 
 ---
 
-## 🧪 Current Available Use Cases (May 28, 2025, V1.0.3)
+## 🧪 Current Available Use Cases (May 28, 2025, V1.1.0)
 
 Sentra supports the following key features and workflows for users:
 
@@ -201,6 +210,25 @@ Sentra supports the following key features and workflows for users:
   - Edit existing characters with all original data pre-populated
   - Access character previews and initiate chats directly from profile pages
 - User-specific views ensure only character creators can edit their characters
+
+### 8. 👥 Friends System
+- **Send Friend Requests**: Users can send friend requests to other users by:
+  - Searching for a user via the search bar
+  - Visiting their profile and clicking "Add Friend"
+- **Manage Friend Requests**: Users receive notifications of pending friend requests in their profile:
+  - Accept requests to become friends
+  - Decline requests to remove them
+  - Pending requests appear at the top of the Friends tab with accept/decline buttons
+- **Friends List**: View and manage your friends:
+  - See all accepted friends in a dedicated "Friends" tab on your profile
+  - Click on any friend to visit their profile
+  - Remove friends with a confirmation dialog
+- **Friendship Status**: User profiles display:
+  - Friend count instead of follower/following counts
+  - "Add Friend" button for new connections
+  - "Remove Friend" button for existing friends
+  - "Request Pending" status for sent requests
+- **Privacy**: Only you can view your own friends list and pending requests
 
 ---
 
