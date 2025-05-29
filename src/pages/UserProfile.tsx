@@ -24,6 +24,7 @@ type Character = {
   avatar: string;
   authorDisplayName: string;
   characterDescription: string;
+  tags: string[];
 };
 
 const UserProfile: React.FC = () => {
@@ -591,8 +592,17 @@ const UserProfile: React.FC = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelectedCharacter(null)}>×</button>
             <h1>{selectedCharacter.name}</h1>
+            <br />
             <p><strong>Author:</strong> {selectedCharacter.authorDisplayName || "Unknown"}</p>
+            <br />
             <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
+            <br />
+            <p><strong>Tags:</strong>{" "}
+            {selectedCharacter.tags && selectedCharacter.tags.length > 0
+              ? selectedCharacter.tags.map(tag => `${tag}`).join(", ")
+              : "No tags provided."}
+            </p>
+            <br />
             {selectedCharacter.avatar && (
               <img src={selectedCharacter.avatar} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
             )}

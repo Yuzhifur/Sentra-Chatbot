@@ -21,7 +21,7 @@ import {
   Timestamp,
   deleteDoc,
   writeBatch,
-  increment
+  increment,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -271,6 +271,9 @@ export class FirebaseService {
         const tagRef = doc(db, 'tags', tag);
         const tagCharRef = doc(tagRef, 'characters', characterId);
         await deleteDoc(tagCharRef);
+        await updateDoc(tagRef, {
+          characterCount: increment(-1)
+        });
         const remaining = await getDocs(collection(tagRef, 'characters'));
         if (remaining.empty) {
           await deleteDoc(tagRef);

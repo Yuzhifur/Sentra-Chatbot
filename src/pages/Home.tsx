@@ -45,6 +45,9 @@ const Home: React.FC = () => {
   const characterCollectionRef = collection(db, "characters");
   const [characterList, setCharacterList] = useState([]);
   const [placeholderUrl, setPlaceholderUrl] = useState<string | null>(null);
+  const [topTags, setTopTags] = useState<
+    { tag: string; characters: any[] }[]
+  >([]);
 
   // fetch the character data from Firestore
   useEffect(() => {
@@ -86,6 +89,45 @@ const Home: React.FC = () => {
     loadPlaceholder();
   }, []);
 
+  // Fetch chararcters with top tags
+  useEffect(() => {
+    const fetchTopTags = async () => {
+      try {
+        const tagsSnapshot = await getDocs(collection(db, 'tags'));
+  
+        // Fetch all characters once and store in a map
+        const allCharacterSnapshot = await getDocs(collection(db, 'characters'));
+        const allCharactersMap = new Map<string, any>();
+        allCharacterSnapshot.docs.forEach(doc => {
+          allCharactersMap.set(doc.id, { docId: doc.id, ...doc.data() });
+        });
+  
+        const tagData = await Promise.all(tagsSnapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          const charSub = await getDocs(collection(docSnap.ref, 'characters'));
+  
+          const characters = charSub.docs
+            .map(doc => allCharactersMap.get(doc.id))  // Fetch from map
+            .filter(Boolean);  // Remove missing entries
+  
+          return {
+            tag: data.tagName || docSnap.id,
+            characterCount: data.characterCount || characters.length,
+            characters
+          };
+        }));
+  
+        const sorted = tagData.sort((a, b) => b.characterCount - a.characterCount).slice(0, 2);
+        setTopTags(sorted);
+      } catch (err) {
+        console.error("Error fetching top tags:", err);
+      }
+    };
+  
+    fetchTopTags();
+  }, []);
+  
+
   const handleStartChat = (characterId: string, characterName: string) => {
     setCharacterForChat({ id: characterId, name: characterName });
     setShowChatPopup(true);
@@ -117,7 +159,10 @@ const Home: React.FC = () => {
       <div className="featured-container">
         {/* Populate character info from firestore database */}
         {characterList.length > 0 ? (
-          characterList.map((char) => (
+          (characterList.length <= 10 ? characterList : [...characterList]
+            .sort(() => Math.random() - 0.5) // shuffle
+            .slice(0, 10)
+          ).map((char) => (
             <div
               key={char.id}
               className="character-card"
@@ -155,6 +200,39 @@ const Home: React.FC = () => {
           <p>No character available yet.</p>
         )}
       </div>
+
+      {/* Tags Section */}
+      {topTags.map((tagGroup, index) => (
+      <div key={tagGroup.tag}>
+        <h2 className="section-title">{tagGroup.tag}</h2>
+        <div className="featured-container">
+          {tagGroup.characters.length > 0 ? (
+            tagGroup.characters.map(char => (
+              <div
+                key={char.docId}
+                className="character-card"
+                onClick={() => setSelectedCharacter(char)}
+              >
+                <div
+                  className="character-image"
+                  style={{
+                    backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                ></div>
+                <div className="character-info">
+                  <h3 className="character-name">{char.name}</h3>
+                  <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No characters for this tag.</p>
+          )}
+        </div>
+      </div>
+    ))}
 
       {/* Character Creation Section */}
       <h2 className="section-title">Character Creation</h2>

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import './CharacterCreation.css';
 import Sidebar from '../components/Sidebar';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, getDocs, increment } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FirebaseService } from '../services/FirebaseService';
 import { CharacterService } from '../services/CharacterService';
@@ -291,7 +291,10 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
         for (const tag of addedTags) {
           const tagRef = doc(db, 'tags', tag);
           const tagCharRef = doc(tagRef, 'characters', characterId);
-          await setDoc(tagRef, { tagName: tag }, { merge: true });
+          await setDoc(tagRef, {
+            tagName: tag,
+            characterCount: increment(1)
+          }, { merge: true });
           await setDoc(tagCharRef, { id:this.props.initialData?.id });
         }
 
@@ -300,6 +303,9 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           const tagRef = doc(db, 'tags', tag);
           const tagCharRef = doc(tagRef, 'characters', characterId);
           await deleteDoc(tagCharRef);
+          await updateDoc(tagRef, {
+            characterCount: increment(-1)
+          });
           const remaining = await getDocs(collection(tagRef, 'characters'));
           if (remaining.empty) {
             await deleteDoc(tagRef);
@@ -369,7 +375,10 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
           const tagRef = doc(db, 'tags', tag);
           const tagCharRef = doc(tagRef, 'characters', newCharacterRef.id);
         
-          await setDoc(tagRef, { tagName: tag }, { merge: true });
+          await setDoc(tagRef, {
+            tagName: tag,
+            characterCount: increment(1)
+          }, { merge: true });
           await setDoc(tagCharRef, { id: characterData.id });
         }
 
