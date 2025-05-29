@@ -164,6 +164,16 @@
   cursor: pointer;
 }
 
+.like-button-wrapper {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.character-card:hover .like-button-wrapper {
+  opacity: 1;
+}
+
 .footer {
   background-color: rgba(181, 184, 201, 0.6);
   padding: 20px;
