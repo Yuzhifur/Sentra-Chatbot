@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);
   const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
-  const [characterForChat, setCharacterForChat] = useState<{id: string, name: string} | null>(null);
+  const [characterForChat, setCharacterForChat] = useState<{ id: string, name: string } | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -91,6 +91,10 @@ const Home: React.FC = () => {
     setShowChatPopup(true);
   };
 
+  const handleLikeCharacter = async (characterId: string) => {
+    
+  }
+
   return (
     <div className="main-content">
       {/* Top search bar and user profile */}
@@ -126,11 +130,25 @@ const Home: React.FC = () => {
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
-              ></div>
+              >
+                <div className="like-button-wrapper">
+                  <button
+                    className="character-item-like"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLikeCharacter(char.docId);
+                    }}
+                    title="Like character"
+                  >
+                    ♥️
+                  </button>
+                </div>
+              </div>
               <div className="character-info">
                 <h3 className="character-name">{char.name}</h3>
                 <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
               </div>
+
             </div>
           ))
         ) : (
