@@ -1,3 +1,4 @@
+import { onRequest } from 'firebase-functions/v2/https';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from "firebase-admin";
 import * as dotenv from "dotenv";
@@ -6,15 +7,24 @@ import { defineSecret } from 'firebase-functions/params';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
+const cors = require('cors');
 
 const claudeApiKey = defineSecret('CLAUDE_API_KEY');
 
 // Initialize Firebase Admin
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 const db = getFirestore();
 
 // Load environment variables
 dotenv.config();
+
+// Configure CORS
+const corsMiddleware = cors({
+  origin: true,
+  credentials: true
+});
 
 // Safe file reading function
 function safeReadFile(filePath: string): string {
@@ -62,6 +72,140 @@ interface Character {
   specialAbility: string;
   scenario: string;
 }
+
+// NEW: Streaming endpoint for chat
+export const processChatStream = onRequest({
+  secrets: [claudeApiKey],
+  maxInstances: 10,
+  timeoutSeconds: 300, // Increase timeout for streaming
+  cors: true,
+}, async (req, res) => {
+  // Handle CORS
+  corsMiddleware(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    try {
+      // Verify authentication token
+      const authToken = req.headers.authorization?.split('Bearer ')[1];
+      if (!authToken) {
+        res.status(401).send('Unauthorized');
+        return;
+      }
+
+      // Verify the token
+      // const decodedToken = await admin.auth().verifyIdToken(authToken);
+      // userId available if needed in future: decodedToken.uid
+
+      const data = req.body;
+
+      if (!data?.messages || !data?.characterId || !data?.sessionId) {
+        res.status(400).send('Missing required fields');
+        return;
+      }
+
+      const { messages, characterId, customScenario, tokenLimit = 1024 } = data;
+      // sessionId available if needed for logging: data.sessionId
+
+      // Validate tokenLimit
+      const validTokenLimits = [256, 512, 1024];
+      const finalTokenLimit = validTokenLimits.includes(tokenLimit) ? tokenLimit : 1024;
+
+      // Get character data
+      const characterDoc = await db.collection("characters").doc(characterId).get();
+      if (!characterDoc.exists) {
+        res.status(404).send('Character not found');
+        return;
+      }
+
+      const character = characterDoc.data() as Character;
+
+      // Set up SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      // Create system prompt
+      const systemPrompt = buildCharacterPrompt(character, customScenario);
+      const userMessage = messages[messages.length - 1];
+      const conversationHistory = formatConversationHistory(messages.slice(0, -1));
+
+      const apiKey = claudeApiKey.value();
+      const anthropic = new Anthropic({ apiKey });
+
+      try {
+        // Create streaming message
+        const stream = await anthropic.messages.create({
+          model: "claude-3-7-sonnet-20250219",
+          max_tokens: finalTokenLimit,
+          temperature: 1.0,
+          system: systemPrompt,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `${systemPrompt}\n\n${conversationHistory}Human: ${userMessage.content}\n\nAssistant:`
+                }
+              ]
+            }
+          ],
+          stream: true,
+        });
+
+        let fullContent = '';
+
+        // Send initial event
+        res.write(`event: start\ndata: ${JSON.stringify({ type: 'start' })}\n\n`);
+
+        // Stream the response
+        for await (const event of stream) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            const text = event.delta.text;
+            fullContent += text;
+
+            // Send SSE event with the delta
+            const eventData = JSON.stringify({
+              type: 'delta',
+              content: text
+            });
+            res.write(`event: message\ndata: ${eventData}\n\n`);
+          }
+        }
+
+        // Send completion event
+        res.write(`event: complete\ndata: ${JSON.stringify({
+          type: 'complete',
+          fullContent
+        })}\n\n`);
+
+        // Close the connection
+        res.end();
+
+      } catch (streamError) {
+        console.error("Error during streaming:", streamError);
+
+        // Send error event
+        const errorData = JSON.stringify({
+          type: 'error',
+          message: 'Failed to generate response'
+        });
+        res.write(`event: error\ndata: ${errorData}\n\n`);
+        res.end();
+      }
+
+    } catch (error) {
+      console.error("Error in streaming endpoint:", error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+});
 
 // Create your function with secrets
 export const processChat = onCall({
@@ -116,7 +260,7 @@ export const processChat = onCall({
     // Validate tokenLimit - only allow specific values
     const validTokenLimits = [256, 512, 1024];
     const finalTokenLimit = validTokenLimits.includes(tokenLimit) ? tokenLimit : 1024;
-    
+
     if (tokenLimit !== finalTokenLimit) {
       console.warn(`Invalid token limit ${tokenLimit} provided, using default ${finalTokenLimit}`);
     }
@@ -174,8 +318,8 @@ export const processChat = onCall({
 // Build character prompt for Claude API with custom scenario support
 function buildCharacterPrompt(character: Character, customScenario?: string): string {
   // Determine which scenario to use
-  const scenarioToUse = customScenario && customScenario.trim() 
-    ? customScenario.trim() 
+  const scenarioToUse = customScenario && customScenario.trim()
+    ? customScenario.trim()
     : (character.scenario || "Not specified");
 
   // Only include example interactions if files were successfully loaded
@@ -214,8 +358,8 @@ function buildCharacterPrompt(character: Character, customScenario?: string): st
     - Temperament/Personality: ${character.temperament || "Not specified"}
 
     CURRENT SCENARIO: ${scenarioToUse}
-    ${customScenario && customScenario.trim() ? 
-      `(Note: This is a custom scenario set specifically for this conversation, different from the character's default scenario)` : 
+    ${customScenario && customScenario.trim() ?
+      `(Note: This is a custom scenario set specifically for this conversation, different from the character's default scenario)` :
       `(This is the character's default scenario)`
     }
 
