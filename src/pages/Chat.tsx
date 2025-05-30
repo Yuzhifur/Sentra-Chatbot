@@ -181,14 +181,17 @@ type ChatState = {
   characterAvatar: string;
   userName: string;
   chatTitle: string;
-  editingMessageIndex: number | null; // Track which message is being edited
-  editingContent: string; // Content being edited
-  showSettingsPopup: boolean; // New: Show settings popup
-  currentTokenLimit: number;   // New: Current token limit setting
+  editingMessageIndex: number | null;
+  editingContent: string;
+  showSettingsPopup: boolean;
+  currentTokenLimit: number;
+  streamingMessage: string | null; // NEW: For streaming content
+  isStreaming: boolean; // NEW: Streaming state
 };
 
 export class Chat extends Component<ChatProps, ChatState> {
   private messagesEndRef: React.RefObject<HTMLDivElement>;
+  private streamingAbortController: AbortController | null = null; // NEW: For aborting streams
 
   constructor(props: ChatProps) {
     super(props);
@@ -204,8 +207,10 @@ export class Chat extends Component<ChatProps, ChatState> {
       chatTitle: props.initialChatTitle || 'Chat',
       editingMessageIndex: null,
       editingContent: '',
-      showSettingsPopup: false,        // New: Initialize settings popup state
-      currentTokenLimit: 1024,         // New: Initialize token limit
+      showSettingsPopup: false,
+      currentTokenLimit: 1024,
+      streamingMessage: null, // NEW
+      isStreaming: false, // NEW
     };
     this.messagesEndRef = React.createRef();
   }
@@ -239,7 +244,11 @@ export class Chat extends Component<ChatProps, ChatState> {
   }
 
   componentWillUnmount() {
-    // New: Clean up event listener
+    // Clean up streaming if active
+    if (this.streamingAbortController) {
+      this.streamingAbortController.abort();
+    }
+
     window.removeEventListener('tokenLimitChanged', this.handleTokenLimitChange);
   }
 
@@ -334,14 +343,14 @@ export class Chat extends Component<ChatProps, ChatState> {
   handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const { input, isLoading, currentTokenLimit } = this.state;
+    const { input, isLoading, currentTokenLimit, isStreaming } = this.state;
     const trimmedInput = input.trim();
 
-    if (!trimmedInput || isLoading) {
+    if (!trimmedInput || isLoading || isStreaming) {
       return;
     }
 
-    this.setState({ isLoading: true, input: '' });
+    this.setState({ isLoading: true, input: '', streamingMessage: null });
 
     try {
       // Send user message
@@ -350,15 +359,49 @@ export class Chat extends Component<ChatProps, ChatState> {
       // Reload messages to get the updated chat
       await this.loadChatData();
 
-      // Generate AI response with current token limit
-      await ChatService.generateResponse(this.props.chatId, currentTokenLimit);
+      // Start streaming response
+      this.setState({ isStreaming: true, streamingMessage: '' });
 
-      // Reload messages again to get the AI response
-      await this.loadChatData();
+      await ChatService.generateResponseStream(
+        this.props.chatId,
+        currentTokenLimit,
+        {
+          onStart: () => {
+            console.log('Streaming started');
+          },
+          onDelta: (delta: string) => {
+            this.setState(prevState => ({
+              streamingMessage: (prevState.streamingMessage || '') + delta
+            }));
+            this.scrollToBottom();
+          },
+          onComplete: async (fullContent: string) => {
+            console.log('Streaming completed');
+            this.setState({
+              isStreaming: false,
+              streamingMessage: null
+            });
+
+            // Reload messages to show the saved AI response
+            await this.loadChatData();
+          },
+          onError: (error: Error) => {
+            console.error('Streaming error:', error);
+            this.setState({
+              error: error.message,
+              isStreaming: false,
+              streamingMessage: null
+            });
+          }
+        }
+      );
+
     } catch (error) {
       console.error("Error in chat:", error);
       this.setState({
-        error: error instanceof Error ? error.message : 'Error sending message'
+        error: error instanceof Error ? error.message : 'Error sending message',
+        isStreaming: false,
+        streamingMessage: null
       });
     } finally {
       this.setState({ isLoading: false });
@@ -386,7 +429,7 @@ export class Chat extends Component<ChatProps, ChatState> {
       return;
     }
 
-    this.setState({ isLoading: true });
+    this.setState({ isLoading: true, streamingMessage: null });
 
     try {
       // Rewind the chat history to the edited message point
@@ -405,11 +448,36 @@ export class Chat extends Component<ChatProps, ChatState> {
       // Reload messages to get the updated chat
       await this.loadChatData();
 
-      // Generate AI response to the modified message with current token limit
-      await ChatService.generateResponse(this.props.chatId, currentTokenLimit);
+      // Start streaming response for the edited message
+      this.setState({ isStreaming: true, streamingMessage: '' });
 
-      // Reload messages again to get the AI response
-      await this.loadChatData();
+      await ChatService.generateResponseStream(
+        this.props.chatId,
+        currentTokenLimit,
+        {
+          onDelta: (delta: string) => {
+            this.setState(prevState => ({
+              streamingMessage: (prevState.streamingMessage || '') + delta
+            }));
+            this.scrollToBottom();
+          },
+          onComplete: async () => {
+            this.setState({
+              isStreaming: false,
+              streamingMessage: null
+            });
+            await this.loadChatData();
+          },
+          onError: (error: Error) => {
+            this.setState({
+              error: error.message,
+              isStreaming: false,
+              streamingMessage: null
+            });
+          }
+        }
+      );
+
     } catch (error) {
       console.error("Error editing message:", error);
       this.setState({
@@ -444,13 +512,16 @@ export class Chat extends Component<ChatProps, ChatState> {
       editingMessageIndex,
       editingContent,
       showSettingsPopup,
-      currentTokenLimit
+      currentTokenLimit,
+      streamingMessage,
+      isStreaming
     } = this.state;
 
     return (
       <div className="chat-container">
         <Sidebar doResetDashboard={() => {}} />
         <div className="chat-main">
+          {/* ... (keep header unchanged) */}
           <div className="chat-header">
             <button
               className="chat-back-button"
@@ -475,7 +546,6 @@ export class Chat extends Component<ChatProps, ChatState> {
                 <h1 className="chat-character-name">{characterName}</h1>
               </div>
 
-              {/* Chat title editor component */}
               <div className="chat-title-wrapper">
                 <ChatTitleEditor
                   chatId={this.props.chatId}
@@ -483,8 +553,7 @@ export class Chat extends Component<ChatProps, ChatState> {
                 />
               </div>
             </div>
-            
-            {/* New: Settings Button */}
+
             <button
               className="chat-settings-button"
               onClick={this.handleSettingsClick}
@@ -516,8 +585,7 @@ export class Chat extends Component<ChatProps, ChatState> {
                         {this.formatTimestamp(message.timestamp)}
                       </span>
                     )}
-                    {/* Edit button for user messages */}
-                    {message.role === 'user' && editingMessageIndex !== index && (
+                    {message.role === 'user' && editingMessageIndex !== index && !isStreaming && (
                       <button
                         className="chat-message-edit-button"
                         onClick={() => this.handleStartEdit(index, message.content)}
@@ -529,7 +597,6 @@ export class Chat extends Component<ChatProps, ChatState> {
                     )}
                   </div>
 
-                  {/* Show message content or editing interface */}
                   {editingMessageIndex === index ? (
                     <div className="chat-message-editing">
                       <textarea
@@ -565,9 +632,27 @@ export class Chat extends Component<ChatProps, ChatState> {
                 </div>
               ))
             )}
+
+            {/* Show streaming message */}
+            {isStreaming && streamingMessage !== null && (
+              <div className="chat-message chat-message-assistant">
+                <div className="chat-message-header">
+                  <span className="chat-message-sender">{characterName}</span>
+                  <span className="chat-message-time">
+                    <span className="streaming-indicator">● Streaming...</span>
+                  </span>
+                </div>
+                <div className="chat-message-content" style={{ whiteSpace: 'pre-line' }}>
+                  {streamingMessage}
+                  <span className="typing-cursor">▊</span>
+                </div>
+              </div>
+            )}
+
             <div ref={this.messagesEndRef} />
 
-            {isLoading && (
+            {/* Show typing indicator only when loading but not streaming */}
+            {isLoading && !isStreaming && (
               <div className="chat-typing-indicator">
                 <div className="chat-typing-dot"></div>
                 <div className="chat-typing-dot"></div>
@@ -582,7 +667,7 @@ export class Chat extends Component<ChatProps, ChatState> {
               value={input}
               onChange={this.handleInputChange}
               placeholder={`Message ${characterName}...`}
-              disabled={isLoading || editingMessageIndex !== null}
+              disabled={isLoading || editingMessageIndex !== null || isStreaming}
               rows={1}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -594,14 +679,13 @@ export class Chat extends Component<ChatProps, ChatState> {
             <button
               type="submit"
               className="chat-send-button"
-              disabled={isLoading || !input.trim() || editingMessageIndex !== null}
+              disabled={isLoading || !input.trim() || editingMessageIndex !== null || isStreaming}
             >
               Send
             </button>
           </form>
         </div>
 
-        {/* New: Chat Settings Popup */}
         {showSettingsPopup && (
           <ChatSettingsPopup onClose={this.handleCloseSettings} />
         )}

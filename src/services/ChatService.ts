@@ -40,6 +40,13 @@ export interface ChatData {
   updatedAt?: Timestamp;
 }
 
+export interface StreamingCallbacks {
+  onStart?: () => void;
+  onDelta?: (delta: string) => void;
+  onComplete?: (fullContent: string) => void;
+  onError?: (error: Error) => void;
+}
+
 export class ChatService {
   /**
    * Create a new chat session between a user and a character
@@ -87,8 +94,8 @@ export class ChatService {
       const defaultTitle = `Chat with ${characterData.name}`;
 
       // Determine scenario to use
-      const scenarioToUse = customScenario && customScenario.trim() 
-        ? customScenario.trim() 
+      const scenarioToUse = customScenario && customScenario.trim()
+        ? customScenario.trim()
         : (characterData.scenario || "");
 
       // Create chat document with scenario
@@ -307,14 +314,14 @@ export class ChatService {
 
       // Create new message array up to and including the edited message
       const rewindedMessages = messages.slice(0, messageIndex);
-      
+
       // Add the edited message
       const editedMessage: Message = {
         role: 'user',
         content: newContent.trim(),
         timestamp: Timestamp.now()
       };
-      
+
       rewindedMessages.push(editedMessage);
 
       // Update chat document with the rewinded history
@@ -378,8 +385,8 @@ export class ChatService {
   }
 
   /**
-   * Generate AI response in chat with custom token limit
-   * Now passes the chat's custom scenario and token limit to the AI
+   * Legacy method - now uses streaming internally
+   * @deprecated Use generateResponseStream for better control
    */
   static async generateResponse(chatId: string, tokenLimit?: number): Promise<Message> {
     try {
@@ -445,6 +452,165 @@ export class ChatService {
       return aiResponse;
     } catch (error) {
       console.error("Error generating AI response:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate AI response with streaming support
+   * @param chatId - The chat session ID
+   * @param tokenLimit - Maximum tokens for the response
+   * @param callbacks - Callbacks for handling streaming events
+   * @returns Promise that resolves when streaming is complete
+   */
+  static async generateResponseStream(
+    chatId: string,
+    tokenLimit: number = 1024,
+    callbacks: StreamingCallbacks
+  ): Promise<void> {
+    let eventSource: EventSource | null = null;
+
+    try {
+      // Get chat session data
+      const chatData = await this.getChatSession(chatId);
+
+      // Get current messages
+      const messages = await this.getChatMessages(chatId);
+
+      // Get auth token
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const token = await currentUser.getIdToken();
+
+      // Determine the Cloud Functions URL based on environment
+      let functionsUrl: string;
+      if (window.location.hostname === 'localhost') {
+        functionsUrl = 'http://localhost:5001/sentra-4114a/us-central1/processChatStream';
+      } else {
+        // For production, use the deployed function URL
+        functionsUrl = 'https://us-central1-sentra-4114a.cloudfunctions.net/processChatStream';
+      }
+
+      // Prepare request data
+      const requestData = {
+        messages,
+        characterId: chatData.characterId,
+        sessionId: chatId,
+        customScenario: chatData.scenario,
+        tokenLimit
+      };
+
+      // Create EventSource for SSE
+      const url = new URL(functionsUrl);
+
+      // We need to use a different approach since EventSource doesn't support POST
+      // Instead, we'll use fetch with a readable stream
+      const response = await fetch(functionsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if the response supports streaming
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Streaming not supported');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let aiContent = '';
+
+      // Start callback
+      callbacks.onStart?.();
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE events in the buffer
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              switch (data.type) {
+                case 'delta':
+                  aiContent += data.content;
+                  callbacks.onDelta?.(data.content);
+                  break;
+
+                case 'complete':
+                  // Save the complete message to Firestore
+                  await this.saveStreamedMessage(chatId, data.fullContent || aiContent);
+                  callbacks.onComplete?.(data.fullContent || aiContent);
+                  break;
+
+                case 'error':
+                  throw new Error(data.message || 'Streaming error');
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error("Error in streaming response:", error);
+      callbacks.onError?.(error instanceof Error ? error : new Error('Unknown error'));
+      throw error;
+    } finally {
+      eventSource?.close();
+    }
+  }
+
+  /**
+   * Save a streamed message to the chat history
+   */
+  private static async saveStreamedMessage(chatId: string, content: string): Promise<void> {
+    try {
+      // Get current messages
+      const messages = await this.getChatMessages(chatId);
+
+      // Create AI message
+      const aiMessage: Message = {
+        role: 'assistant',
+        content,
+        timestamp: Timestamp.now()
+      };
+
+      // Add to messages
+      const updatedMessages = [...messages, aiMessage];
+
+      // Update chat document
+      const db = getFirestore();
+      const chatRef = doc(db, "chats", chatId);
+
+      await updateDoc(chatRef, {
+        history: JSON.stringify({ messages: updatedMessages }),
+        updatedAt: Timestamp.now()
+      });
+
+    } catch (error) {
+      console.error("Error saving streamed message:", error);
       throw error;
     }
   }
