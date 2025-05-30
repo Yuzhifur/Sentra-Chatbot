@@ -355,7 +355,7 @@ export class FirebaseService {
         const updatedLikedCharacterList = currentList.filter((id: string) => id !== characterId);
 
         await updateDoc(userRef, {
-          userCharacters: updatedLikedCharacterList
+          userLikedCharacters: updatedLikedCharacterList 
         });
       }
     } catch (error) {
