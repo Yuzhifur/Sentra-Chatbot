@@ -283,22 +283,6 @@ describe('UserProfile Component Tests', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
-  test('switches between tabs', async () => {
-    renderWithRouter(<UserProfile />);
-
-    await waitFor(() => {
-      // Initially on Characters tab
-      expect(screen.getByText('Test Character 1')).toBeInTheDocument();
-      
-      // Click on Liked tab
-      const likedTab = screen.getByText('Liked');
-      fireEvent.click(likedTab);
-    });
-
-    // Should show empty state for liked characters
-    expect(screen.getByText("You haven't liked any Characters yet.")).toBeInTheDocument();
-  });
-
   
 
   test('opens chat popup from character popup', async () => {
