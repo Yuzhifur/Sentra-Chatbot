@@ -157,177 +157,190 @@ const Home: React.FC = () => {
         userLikedCharacters: arrayUnion(characterId)
       });
 
-    }catch (error: any) {
-    console.error('Error liking character', error);
+    } catch (error: any) {
+      console.error('Error liking character', error);
+    }
   }
-}
 
-return (
-  <div className="main-content">
-    {/* Top search bar and user profile */}
-    <div className="search-bar-container">
-      <SearchBar />
-      <div className="user-profile" onClick={() => navigate('/profile')}>
-        {username ? username.charAt(0).toUpperCase() : 'U'}
+  return (
+    <div className="main-content">
+      {/* Top search bar and user profile */}
+      <div className="search-bar-container">
+        <SearchBar />
+        <div className="user-profile" onClick={() => navigate('/profile')}>
+          {username ? username.charAt(0).toUpperCase() : 'U'}
+        </div>
       </div>
-    </div>
 
-    {/* Welcome Message */}
-    {!loading && (
-      <div className="welcome-message">
-        Welcome, <span className="username-highlight">{username || 'User'}</span>!
-      </div>
-    )}
-
-    {/* Featured Characters Section */}
-    <h2 className="section-title">Featured</h2>
-    <div className="featured-container">
-      {/* Populate character info from firestore database */}
-      {characterList.length > 0 ? (
-        (characterList.length <= 10 ? characterList : [...characterList]
-          .sort(() => Math.random() - 0.5) // shuffle
-          .slice(0, 10)
-        ).map((char) => (
-          <div
-            key={char.id}
-            className="character-card"
-            onClick={() => setSelectedCharacter(char)}
-          >
-            <div
-              className="character-image"
-              style={{
-                backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <div className="like-button-wrapper">
-                <button
-                  className="character-item-like"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLikeCharacter(char.docId);
-                  }}
-                  title="Like character"
-                >
-                  ♥️
-                </button>
-              </div>
-            </div>
-            <div className="character-info">
-              <h3 className="character-name">{char.name}</h3>
-              <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
-            </div>
-
-          </div>
-        ))
-      ) : (
-        <p>No character available yet.</p>
+      {/* Welcome Message */}
+      {!loading && (
+        <div className="welcome-message">
+          Welcome, <span className="username-highlight">{username || 'User'}</span>!
+        </div>
       )}
-    </div>
 
-    {/* Tags Section */}
-    {topTags.map((tagGroup, index) => (
-      <div key={tagGroup.tag}>
-        <h2 className="section-title">{tagGroup.tag}</h2>
-        <div className="featured-container">
-          {tagGroup.characters.length > 0 ? (
-            tagGroup.characters.map(char => (
+      {/* Featured Characters Section */}
+      <h2 className="section-title">Featured</h2>
+      <div className="featured-container">
+        {/* Populate character info from firestore database */}
+        {characterList.length > 0 ? (
+          (characterList.length <= 10 ? characterList : [...characterList]
+            .sort(() => Math.random() - 0.5) // shuffle
+            .slice(0, 10)
+          ).map((char) => (
+            <div
+              key={char.id}
+              className="character-card"
+              onClick={() => setSelectedCharacter(char)}
+            >
               <div
-                key={char.docId}
-                className="character-card"
-                onClick={() => setSelectedCharacter(char)}
+                className="character-image"
+                style={{
+                  backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               >
-                <div
-                  className="character-image"
-                  style={{
-                    backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                ></div>
-                <div className="character-info">
-                  <h3 className="character-name">{char.name}</h3>
-                  <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
+                <div className="like-button-wrapper">
+                  <button
+                    className="character-item-like"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLikeCharacter(char.docId);
+                    }}
+                    title="Like character"
+                  >
+                    ♥️
+                  </button>
                 </div>
               </div>
-            ))
-          ) : (
-            <p>No characters for this tag.</p>
-          )}
+              <div className="character-info">
+                <h3 className="character-name">{char.name}</h3>
+                <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
+              </div>
+
+            </div>
+          ))
+        ) : (
+          <p>No character available yet.</p>
+        )}
+      </div>
+
+      {/* Tags Section */}
+      {topTags.map((tagGroup) => (
+        <div key={tagGroup.tag}>
+          <h2 className="section-title">{tagGroup.tag}</h2>
+          <div className="featured-container">
+            {tagGroup.characters.length > 0 ? (
+              tagGroup.characters.map((char) => (
+                <div
+                  key={char.docId}
+                  className="character-card"
+                  onClick={() => setSelectedCharacter(char)}
+                >
+                  <div
+                    className="character-image"
+                    style={{
+                      backgroundImage: `url(${char.avatar || placeholderUrl || ""})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  >
+                    <div className="like-button-wrapper">
+                      <button
+                        className="character-item-like"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLikeCharacter(char.docId);
+                        }}
+                        title="Like character"
+                      >
+                        ♥️
+                      </button>
+                    </div>
+                  </div>
+                  <div className="character-info">
+                    <h3 className="character-name">{char.name}</h3>
+                    <p className="character-author">by {char.authorDisplayName || "Unknown"}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No characters for this tag.</p>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Character Creation Section */}
+      <h2 className="section-title">Character Creation</h2>
+      <div className="creation-container">
+        {/* Fixed element: Portal to character creation */}
+        <div className="creation-card" onClick={() => navigate('/character-creation')}>
+          <p>Go to Character Creation</p>
+        </div>
+        {/* Templates section - would be dynamic eventually */}
+        <div className="template-card">
+          <p>Template 1</p>
+        </div>
+        <div className="template-card">
+          <p>Template 2</p>
         </div>
       </div>
-    ))}
 
-    {/* Character Creation Section */}
-    <h2 className="section-title">Character Creation</h2>
-    <div className="creation-container">
-      {/* Fixed element: Portal to character creation */}
-      <div className="creation-card" onClick={() => navigate('/character-creation')}>
-        <p>Go to Character Creation</p>
+      {/* Footer */}
+      <div className="footer">
+        <a href="#">About</a>
+        <a href="#">Policies</a>
+        <a href="#">Blog</a>
       </div>
-      {/* Templates section - would be dynamic eventually */}
-      <div className="template-card">
-        <p>Template 1</p>
-      </div>
-      <div className="template-card">
-        <p>Template 2</p>
-      </div>
-    </div>
 
-    {/* Footer */}
-    <div className="footer">
-      <a href="#">About</a>
-      <a href="#">Policies</a>
-      <a href="#">Blog</a>
-    </div>
-
-    {/* Character Popup */}
-    {selectedCharacter && (
-      <div className="modal-overlay" onClick={() => setSelectedCharacter(null)}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close" onClick={() => setSelectedCharacter(null)}>×</button>
-          <h1>{selectedCharacter.name}</h1>
-          <br />
-          <p><strong>Author:</strong> {selectedCharacter.authorDisplayName || "Unknown"}</p>
-          <br />
-          <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
-          <br />
-          <p><strong>Tags:</strong>{" "}
-            {selectedCharacter.tags && selectedCharacter.tags.length > 0
-              ? selectedCharacter.tags.map(tag => `${tag}`).join(", ")
-              : "No tags provided."}
-          </p>
-          <br />
-          {selectedCharacter.imageUrl && (
-            <img src={selectedCharacter.imageUrl} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
-          )}
-          <button
-            className="chat-item"
-            onClick={() => handleStartChat(selectedCharacter.docId, selectedCharacter.name)}
-            style={{
-              cursor: 'pointer',
-              fontSize: '15px',
-              marginLeft: '10px',
-              display: 'inline-block'
-            }}
-          >
-            Let's Chat! ✏️
-          </button>
+      {/* Character Popup */}
+      {selectedCharacter && (
+        <div className="modal-overlay" onClick={() => setSelectedCharacter(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedCharacter(null)}>×</button>
+            <h1>{selectedCharacter.name}</h1>
+            <br />
+            <p><strong>Author:</strong> {selectedCharacter.authorDisplayName || "Unknown"}</p>
+            <br />
+            <p><strong>Description:</strong> {selectedCharacter.characterDescription || "No description provided."}</p>
+            <br />
+            <p><strong>Tags:</strong>{" "}
+              {selectedCharacter.tags && selectedCharacter.tags.length > 0
+                ? selectedCharacter.tags.map(tag => `${tag}`).join(", ")
+                : "No tags provided."}
+            </p>
+            <br />
+            {selectedCharacter.imageUrl && (
+              <img src={selectedCharacter.imageUrl} alt={selectedCharacter.name} style={{ width: "100%", borderRadius: "8px" }} />
+            )}
+            <button
+              className="chat-item"
+              onClick={() => handleStartChat(selectedCharacter.docId, selectedCharacter.name)}
+              style={{
+                cursor: 'pointer',
+                fontSize: '15px',
+                marginLeft: '10px',
+                display: 'inline-block'
+              }}
+            >
+              Let's Chat! ✏️
+            </button>
+          </div>
         </div>
-      </div>
-    )}
+      )}
 
-    {/* Chat History Popup */}
-    {showChatPopup && characterForChat && (
-      <CharacterChatPopup
-        characterId={characterForChat.id}
-        characterName={characterForChat.name}
-        onClose={() => setShowChatPopup(false)}
-      />
-    )}
-  </div>
-);
+      {/* Chat History Popup */}
+      {showChatPopup && characterForChat && (
+        <CharacterChatPopup
+          characterId={characterForChat.id}
+          characterName={characterForChat.name}
+          onClose={() => setShowChatPopup(false)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default Home;
