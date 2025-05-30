@@ -15,6 +15,7 @@ type UserData = {
   userAvatar: string;
   userDescription: string;
   userCharacters: string[];
+  userLikedCharacters: string[];
 };
 
 type Character = {
@@ -35,6 +36,7 @@ const UserProfile: React.FC = () => {
   const [isOwnProfile, setIsOwnProfile] = useState<boolean>(false);
   const [showSettingsPopup, setShowSettingsPopup] = useState<boolean>(false);
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [likedCharacters, setLikedCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
   const [characterForChat, setCharacterForChat] = useState<{id: string, name: string} | null>(null);
@@ -125,6 +127,49 @@ const UserProfile: React.FC = () => {
     };
 
     fetchCharacters();
+  }, [userData, isOwnProfile]);
+
+  useEffect(() => {
+    // Fetch character data once we have user data
+    const fetchLikedCharacters = async () => {
+      if (userData && userData.userLikedCharacters && userData.userLikedCharacters.length > 0) {
+        try {
+          // If viewing own profile, use the getUserLikedCharacters service
+          if (isOwnProfile) {
+            const auth = getAuth();
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              const userLikedChars = await FirebaseService.getUserLikedCharacters(currentUser.uid);
+              setLikedCharacters(userLikedChars);
+              console.log(userLikedChars)
+            }
+          } else {
+            // For other users, fetch characters from their userLikedCharacters array
+            // This would depend on your character retrieval service
+            const userLikedChars = await Promise.all(
+              userData.userLikedCharacters.map(async (charId) => {
+                try {
+                  const charData = await FirebaseService.getCharacterById(charId);
+                  return {
+                    ...charData,
+                    docId: charId
+                  };
+                } catch (err) {
+                  console.error(`Error fetching character ${charId}:`, err);
+                  return null;
+                }
+              })
+            );
+
+            setCharacters(userLikedChars.filter(char => char !== null) as Character[]);
+          }
+        } catch (error) {
+          console.error("Error fetching liked characters:", error);
+        }
+      }
+    };
+
+    fetchLikedCharacters();
   }, [userData, isOwnProfile]);
 
   useEffect(() => {
@@ -301,6 +346,7 @@ const UserProfile: React.FC = () => {
 
       // Delete from Firestore
       await FirebaseService.deleteCharacter(currentUser.uid, characterId);
+      await FirebaseService.deleteLikedCharacter(currentUser.uid, characterId);
 
       // Update UI by removing the deleted character from local state
       setCharacters(prev =>
@@ -327,6 +373,28 @@ const UserProfile: React.FC = () => {
       </div>
     );
   }
+
+  const handleUnlikeCharacter = async (characterId: string) => {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('You must be logged in to unlike a character');
+      }
+
+      // Delete from Firestore
+      await FirebaseService.deleteLikedCharacter(currentUser.uid, characterId);
+
+      // Update UI by removing the deleted character from local state
+      setLikedCharacters(prev =>
+        prev.filter(character => character.docId !== characterId)
+      );
+    } catch (error: any) {
+      console.error('Error unliking character:', error);
+      alert(error.message || 'Failed to unliking character. Please try again.');
+    }
+  };
 
   return (
     <div className="user-profile-page">
@@ -491,8 +559,48 @@ const UserProfile: React.FC = () => {
           )}
 
           {activeTab === 'liked' && (
-            <div className="user-empty-state">
-              {isOwnProfile ? "You haven't liked any Characters yet." : "This user hasn't liked any Characters yet."}
+            <div className="user-characters-grid">
+              {likedCharacters.length > 0 ? (
+                likedCharacters.map((character) => (
+                  <div key={character.docId || `char-${character.id}`} className="character-item">
+                    <div
+                      className="character-item-content"
+                      onClick={() => handleCharacterClick(character)}
+                    >
+                      <div className="character-item-image">
+                        {character.avatar ? (
+                          <img src={character.avatar} alt={character.name} />
+                        ) : (
+                          <div className="character-item-image-placeholder">
+                            {character.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="character-item-name">{character.name}</div>
+                    </div>
+                    {isOwnProfile && (
+                      <div>
+                        <span>
+                          <button
+                            className="character-item-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnlikeCharacter(character.docId);
+                            }}
+                            title="Unlike character"
+                          >
+                            ♥️
+                          </button>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="user-empty-state">
+                  {isOwnProfile ? "You have no liked characters" : "This user doesn't have any liked characters."}
+                </div>
+              )}
             </div>
           )}
 

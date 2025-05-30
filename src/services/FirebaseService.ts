@@ -41,6 +41,7 @@ export interface UserData {
   userAvatar: string;
   userDescription: string;
   userCharacters: string[];
+  userLikedCharacters: string[];
   friendCount?: number; // Add this field
   createdAt?: any; // FirebaseTimestamp
   lastLogin?: any; // FirebaseTimestamp
@@ -219,6 +220,37 @@ export class FirebaseService {
     }
   }
 
+  static async getUserLikedCharacters(userId: string): Promise<any[]> {
+    try {
+      const userData = await this.getUserData(userId);
+
+      if (!userData || !userData.userLikedCharacters || userData.userLikedCharacters.length === 0) {
+        return [];
+      }
+
+      const db = getFirestore();
+      const characters = [];
+
+      // Fetch each character document
+      for (const characterId of userData.userLikedCharacters) {
+        const characterDoc = await getDoc(doc(db, "characters", characterId));
+
+        if (characterDoc.exists()) {
+          characters.push({
+            ...characterDoc.data(),
+            docId: characterId
+          });
+        }
+      }
+
+      return characters;
+    } catch (error) {
+      console.error("Error fetching user characters:", error);
+      throw error;
+    }
+  }
+
+
   // Get a character by its ID
   static async getCharacterById(characterId: string): Promise<any> {
     try {
@@ -302,6 +334,32 @@ export class FirebaseService {
       }
     } catch (error) {
       console.error("Error deleting character:", error);
+      throw error;
+    }
+  }
+
+  static async deleteLikedCharacter(userId: string, characterId: string): Promise<void> {
+    console.log("userId: " + userId + " characterId: " + characterId)
+    try {
+      const db = getFirestore();
+
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const currentList = Array.isArray(userData.userLikedCharacters)
+          ? userData.userLikedCharacters
+          : [];
+
+        const updatedLikedCharacterList = currentList.filter((id: string) => id !== characterId);
+
+        await updateDoc(userRef, {
+          userCharacters: updatedLikedCharacterList
+        });
+      }
+    } catch (error) {
+      console.error("Error unliking character:", error);
       throw error;
     }
   }
