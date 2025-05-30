@@ -165,7 +165,7 @@
 }
 
 .like-button-wrapper {
-  position: absolute;
+  position: static;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
