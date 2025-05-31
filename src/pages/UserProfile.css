@@ -1,7 +1,10 @@
+/* src/pages/UserProfile.css - Updated with CSS Variables */
+
 .user-profile-page {
   display: flex;
   height: 100vh;
   z-index: 0;
+  background-color: var(--bg-primary);
 }
 
 .user-main-content {
@@ -11,14 +14,15 @@
   align-items: center;
   justify-content: flex-start;
   padding: 2.5rem;
-  background-color: #f7fafc;
+  background-color: var(--bg-secondary);
   overflow-y: auto;
+  color: var(--text-primary);
 }
 
 .loading-spinner {
   margin-top: 5rem;
   font-size: 1.2rem;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .user-avatar {
@@ -33,6 +37,8 @@
   font-size: 1.875rem;
   font-weight: bold;
   overflow: hidden;
+  border: 3px solid var(--border-primary);
+  box-shadow: var(--shadow-lg);
 }
 
 .user-avatar-image {
@@ -45,28 +51,30 @@
   margin-top: 1rem;
   font-size: 1.5rem;
   font-weight: bold;
+  color: var(--text-primary);
 }
 
 .user-stats {
   margin-top: 0.5rem;
-  color: #718096;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   display: flex;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .user-bio {
   margin-top: 1rem;
   max-width: 80%;
   text-align: center;
-  color: #4a5568;
+  color: var(--text-secondary);
 }
 
 .settings-form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: white;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .user-settings-buttons {
@@ -77,37 +85,50 @@
 
 .user-settings-button {
   padding: 0.5rem 1rem;
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 9999px;
-  color: white;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-weight: 500;
 }
 
 .user-settings-button:hover {
-  background-color: #9ca3af;
+  background-color: var(--brand-secondary);
 }
 
 .user-logout-button {
   padding: 0.5rem 1rem;
-  background-color: #f87171;
+  background-color: var(--error);
   border: none;
   border-radius: 9999px;
-  color: white;
+  color: var(--text-inverse);
   cursor: pointer;
   transition: background-color 0.2s;
   font-weight: 500;
 }
 
 .user-logout-button:hover {
-  background-color: #ef4444;
+  background-color: #dc2626;
+}
+
+/* Theme Toggle Section */
+.theme-toggle-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .user-tabs {
   display: flex;
   gap: 1.5rem;
   margin-top: 2.5rem;
-  color: #374151;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .user-tab {
@@ -115,14 +136,20 @@
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  padding-bottom: 0.25rem;
-  color: #374151;
+  padding-bottom: 0.5rem;
+  color: var(--text-secondary);
+  transition: color 0.2s, border-color 0.2s;
+  border-bottom: 2px solid transparent;
 }
 
 .user-tab.active {
   font-weight: bold;
-  border-bottom: 2px solid #374151;
+  color: var(--text-primary);
+  border-bottom-color: var(--brand-primary);
+}
 
+.user-tab:hover:not(.active) {
+  color: var(--text-primary);
 }
 
 .user-tab-content {
@@ -133,7 +160,7 @@
 
 .user-empty-state {
   margin-top: 2.5rem;
-  color: #6b7280;
+  color: var(--text-tertiary);
   text-align: center;
 }
 
@@ -148,15 +175,17 @@
   position: relative;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   transition: transform 0.2s, box-shadow 0.2s;
   height: 200px;
   cursor: pointer;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .character-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .character-item-content {
@@ -174,6 +203,10 @@
   overflow: hidden;
 }
 
+.dark-mode .character-item-image {
+  background: linear-gradient(135deg, #374151, #4b5563);
+}
+
 .character-item-image img {
   width: 100%;
   height: 100%;
@@ -187,8 +220,8 @@
 }
 
 .character-item-name {
-  background-color: #1a1a2e;
-  color: white;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
   padding: 0.75rem;
   font-size: 0.875rem;
   text-align: center;
@@ -201,7 +234,7 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background-color: white;
+  background-color: var(--bg-primary);
   border: none;
   border-radius: 50%;
   width: 2rem;
@@ -211,20 +244,25 @@
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .character-item:hover .character-item-delete {
   opacity: 1;
 }
 
+.character-item-delete:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
 .character-item-edit {
   position: absolute;
   top: 0.5rem;
   right: 3rem;
-  background-color: white;
+  background-color: var(--bg-primary);
   border: none;
   border-radius: 50%;
   width: 2rem;
@@ -234,13 +272,18 @@
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .character-item:hover .character-item-edit {
   opacity: 1;
+}
+
+.character-item-edit:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
 }
 
 /* Modal styling for character popup */
@@ -250,7 +293,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.5);
+  background-color: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,14 +302,16 @@
 
 .modal-content {
   position: relative;
-  background: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   padding: 20px;
   border-radius: 12px;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-primary);
 }
 
 .modal-close {
@@ -279,32 +324,34 @@
   cursor: pointer;
   opacity: 1;
   transition: none;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .modal-close:hover {
-  color: #e00;
+  color: var(--error);
 }
 
 .chat-item {
   margin-top: 15px;
   padding: 8px 10px;
-  color: white;
+  color: var(--text-inverse);
+  background-color: var(--brand-primary);
   border: none;
   border-radius: 20px;
   text-decoration: none;
   transition: background-color 0.2s;
+  cursor: pointer;
 }
 
 .chat-item:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: var(--brand-secondary) !important;
 }
 
 /* Friend Action Buttons in Stats */
 .friend-action-button {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--brand-primary);
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0;
@@ -313,16 +360,16 @@
 }
 
 .friend-action-button:hover:not(:disabled) {
-  color: #2563eb;
+  color: var(--brand-secondary);
 }
 
 .friend-action-button:disabled {
-  color: #9ca3af;
+  color: var(--text-quaternary);
   cursor: not-allowed;
 }
 
 .friend-action-button.remove {
-  color: #ef4444;
+  color: var(--error);
 }
 
 .friend-action-button.remove:hover:not(:disabled) {
@@ -330,7 +377,7 @@
 }
 
 .friend-pending {
-  color: #f59e0b;
+  color: var(--warning);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -344,10 +391,10 @@
 .section-subtitle {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 /* Friend Requests Section */
@@ -366,15 +413,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  background-color: #fef3c7;
-  border: 1px solid #fde68a;
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-border);
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
 
 .friend-request-item:hover {
-  background-color: #fde68a;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-tertiary);
+  box-shadow: var(--shadow-sm);
 }
 
 .friend-info {
@@ -414,12 +461,12 @@
 
 .friend-display-name {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   font-size: 0.9375rem;
 }
 
 .friend-username {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.8125rem;
 }
 
@@ -444,7 +491,7 @@
 }
 
 .friend-accept-btn {
-  background-color: #10b981;
+  background-color: var(--success);
   color: white;
 }
 
@@ -454,7 +501,7 @@
 }
 
 .friend-decline-btn {
-  background-color: #ef4444;
+  background-color: var(--error);
   color: white;
 }
 
@@ -479,18 +526,18 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .friend-item:hover {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Responsive adjustments */
@@ -523,6 +570,11 @@
   .friend-request-actions {
     justify-content: center;
   }
+
+  .theme-toggle-section {
+    margin-top: 1rem;
+    padding: 0.75rem;
+  }
 }
 
 /* Animation for friend request actions */
@@ -540,4 +592,61 @@
 .friend-request-item.accepting,
 .friend-request-item.declining {
   animation: fadeOut 0.3s ease-out forwards;
+}
+
+
+
+
+/* Enhanced Theme Toggle Section for UserProfile.css */
+
+/* Theme Toggle Section - Better integration */
+.theme-toggle-section {
+  margin: 1.5rem 0;
+  padding: 0; /* Remove padding to let ThemeToggle handle its own */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.theme-toggle-section .theme-toggle-container {
+  width: 100%;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  border: 2px solid var(--border-primary);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle-section .theme-toggle-container:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-section .theme-toggle-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-section .theme-toggle-label::before {
+  content: '🎨';
+  font-size: 1.25rem;
+}
+
+/* Dark mode specific adjustments for theme toggle section */
+.dark-mode .theme-toggle-section .theme-toggle-container {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  border-color: var(--border-secondary);
+}
+
+.dark-mode .theme-toggle-section .theme-toggle-container:hover {
+  border-color: var(--brand-primary);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 20px rgba(96, 165, 250, 0.1);
 }

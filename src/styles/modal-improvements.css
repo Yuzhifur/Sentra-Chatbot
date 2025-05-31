@@ -1,0 +1,366 @@
+/* src/styles/modal-improvements.css - Enhanced Modal Styles */
+
+/* Universal Modal Overlay Improvements */
+.modal-overlay,
+.chat-popup-overlay,
+.scenario-popup-overlay,
+.chat-settings-overlay,
+.user-settings-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Universal Modal Content Improvements */
+.modal-content,
+.chat-popup-content,
+.scenario-popup-content,
+.chat-settings-content,
+.user-settings-popup-content {
+  position: relative;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border-primary);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Enhanced Close Button */
+.modal-close,
+.chat-popup-close,
+.scenario-popup-close,
+.chat-settings-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.modal-close:hover,
+.chat-popup-close:hover,
+.scenario-popup-close:hover,
+.chat-settings-close:hover {
+  background: var(--error);
+  color: var(--text-inverse);
+  border-color: var(--error);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+/* Enhanced Modal Headers */
+.modal-content h1,
+.modal-content h2,
+.chat-popup-header h2,
+.scenario-popup-header h2,
+.chat-settings-header h2 {
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-primary);
+  font-weight: 600;
+}
+
+/* Enhanced Modal Body Content */
+.modal-content p,
+.chat-popup-content p,
+.scenario-popup-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.modal-content strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Enhanced Images in Modals */
+.modal-content img {
+  border-radius: 12px;
+  border: 2px solid var(--border-primary);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.modal-content img:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Enhanced Modal Buttons */
+.modal-content .chat-item,
+.chat-popup-content button:not(.chat-popup-close),
+.scenario-popup-content button:not(.scenario-popup-close) {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: var(--text-inverse);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-content .chat-item:hover,
+.chat-popup-content button:not(.chat-popup-close):hover,
+.scenario-popup-content button:not(.scenario-popup-close):hover {
+  background: linear-gradient(135deg, var(--brand-secondary), var(--brand-tertiary));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Specific Improvements for Chat Settings */
+.chat-settings-content {
+  width: 90%;
+  max-width: 520px;
+}
+
+.chat-settings-header {
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  border-bottom: 2px solid var(--border-primary);
+  border-radius: 16px 16px 0 0;
+}
+
+.chat-settings-body {
+  background: var(--bg-primary);
+  padding: 1.5rem;
+}
+
+.chat-settings-footer {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  border-top: 2px solid var(--border-primary);
+  border-radius: 0 0 16px 16px;
+}
+
+/* Enhanced Token Options */
+.token-option {
+  position: relative;
+  border: 2px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+  overflow: hidden;
+}
+
+.token-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.token-option:hover::before {
+  opacity: 1;
+}
+
+.token-option:hover {
+  border-color: var(--brand-primary);
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.token-option.selected {
+  border-color: var(--brand-primary);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: var(--text-inverse);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 4px rgba(59, 130, 246, 0.1);
+  transform: scale(1.02);
+}
+
+.dark-mode .token-option.selected {
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 4px rgba(96, 165, 250, 0.2),
+    0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+.token-option.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-inverse);
+  animation: checkmark 0.3s ease-out;
+}
+
+@keyframes checkmark {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-45deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Enhanced Radio Buttons */
+.token-option-radio input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--brand-primary);
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.token-option.selected .token-option-radio input[type="radio"] {
+  accent-color: var(--text-inverse);
+  transform: scale(1.1);
+}
+
+/* Enhanced Typography in Options */
+.token-option-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.token-option.selected .token-option-title {
+  color: var(--text-inverse);
+}
+
+.token-option-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-left: 32px;
+  margin-top: 0.5rem;
+}
+
+.token-option.selected .token-option-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Enhanced Settings Buttons */
+.settings-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  min-width: 100px;
+  font-family: inherit;
+  letter-spacing: -0.025em;
+}
+
+.settings-button.cancel {
+  background: var(--bg-quaternary);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-secondary);
+}
+
+.settings-button.cancel:hover {
+  background: var(--border-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-button.save {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: var(--text-inverse);
+  border: 2px solid transparent;
+}
+
+.settings-button.save:hover {
+  background: linear-gradient(135deg, var(--brand-secondary), var(--brand-tertiary));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Responsive Improvements */
+@media (max-width: 640px) {
+  .modal-content,
+  .chat-popup-content,
+  .scenario-popup-content,
+  .chat-settings-content {
+    width: 95%;
+    margin: 10px;
+    border-radius: 12px;
+  }
+  
+  .token-option {
+    padding: 1rem;
+  }
+  
+  .token-option-description {
+    margin-left: 0;
+    margin-top: 0.75rem;
+  }
+  
+  .settings-button {
+    width: 100%;
+    padding: 1rem;
+  }
+}

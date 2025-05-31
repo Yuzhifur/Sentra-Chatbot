@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { FirebaseService } from './services/FirebaseService';
+import { ThemeService } from './services/ThemeService';
 import { initializeDefaultCharacter } from './services/InitDefaultCharacter';
 import { Login } from './pages/Login';
 import { CreateAccount } from './pages/CreateAccount';
@@ -12,6 +13,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import UserProfile from './pages/UserProfile';
 import CharacterCreationWrapper from './pages/CharacterCreation';
 import './App.css';
+import './styles/themes.css';
+import './styles/modal-improvements.css'; // Add the new modal styles
 
 type AppProps = {};
 
@@ -22,6 +25,8 @@ type AppState = {
 };
 
 export class App extends Component<AppProps, AppState> {
+  private themeCleanup?: () => void;
+
   constructor(props: AppProps) {
     super(props);
 
@@ -33,6 +38,12 @@ export class App extends Component<AppProps, AppState> {
   }
 
   componentDidMount() {
+    // Initialize theme service early to prevent flash of wrong theme
+    ThemeService.initializeTheme();
+    
+    // Listen for system theme changes
+    this.themeCleanup = ThemeService.listenForSystemThemeChanges();
+
     // Hide firebase welcome content when react app mounts
     const messageEl = document.getElementById('message');
     const loadEl = document.getElementById('load');
@@ -67,6 +78,13 @@ export class App extends Component<AppProps, AppState> {
         loading: false
       });
     });
+  }
+
+  componentWillUnmount() {
+    // Cleanup theme listener
+    if (this.themeCleanup) {
+      this.themeCleanup();
+    }
   }
 
   doSwitchToLogin = () => {

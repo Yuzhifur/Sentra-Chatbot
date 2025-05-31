@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import UserSettingsPopup from '../components/UserSettingsPopup';
+import ThemeToggle from '../components/ThemeToggle';
 import { getAuth } from 'firebase/auth';
 import { FirebaseService } from '../services/FirebaseService';
 import './UserProfile.css';
@@ -471,6 +472,13 @@ const UserProfile: React.FC = () => {
             >
               Logout
             </button>
+          </div>
+        )}
+
+        {/* Theme Toggle - Only show for own profile */}
+        {isOwnProfile && (
+          <div className="theme-toggle-section">
+            <ThemeToggle size="medium" showLabel={true} />
           </div>
         )}
 
