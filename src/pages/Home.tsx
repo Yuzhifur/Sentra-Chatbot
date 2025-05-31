@@ -19,6 +19,7 @@ const Home: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<any | null>(null);
   const [showChatPopup, setShowChatPopup] = useState<boolean>(false);
   const [characterForChat, setCharacterForChat] = useState<{ id: string, name: string } | null>(null);
+  const [featuredCharacters, setFeaturedCharacters] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -73,6 +74,17 @@ const Home: React.FC = () => {
 
     getCharacterList();
   }, []);
+
+  useEffect(() => {
+    if (characterList.length <= 10) {
+      setFeaturedCharacters(characterList);
+    } else {
+      const shuffled = [...characterList]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
+      setFeaturedCharacters(shuffled);
+    }
+  }, [characterList]);
 
   // get the URL of placeholder.png from Storage
   useEffect(() => {
@@ -182,12 +194,9 @@ const Home: React.FC = () => {
       {/* Featured Characters Section */}
       <h2 className="section-title">Featured</h2>
       <div className="featured-container">
-        {/* Populate character info from firestore database */}
-        {characterList.length > 0 ? (
-          (characterList.length <= 10 ? characterList : [...characterList]
-            .sort(() => Math.random() - 0.5) // shuffle
-            .slice(0, 10)
-          ).map((char) => (
+        {/* Populate character info */}
+        {featuredCharacters.length > 0 ? (
+          featuredCharacters.map((char) => (
             <div
               key={char.id}
               className="character-card"
