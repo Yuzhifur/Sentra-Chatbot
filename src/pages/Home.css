@@ -1,8 +1,11 @@
+/* src/pages/Home.css - Updated with CSS Variables */
+
 /* Home page styling */
 .home-container {
   display: flex;
   width: 100%;
   min-height: 100vh;
+  background-color: var(--bg-secondary);
 }
 
 .main-content {
@@ -10,6 +13,8 @@
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .search-bar-container {
@@ -32,10 +37,17 @@
   width: 100%;
   padding: 12px 50px 12px 20px;
   border-radius: 30px;
-  border: none;
+  border: 1px solid var(--border-primary);
   font-size: 16px;
   background: linear-gradient(90deg, rgba(255, 236, 170, 0.8) 0%, rgba(255, 182, 193, 0.8) 100%);
-  color: #333;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.dark-mode .main-search-input {
+  background: linear-gradient(90deg, rgba(120, 119, 198, 0.3) 0%, rgba(255, 100, 150, 0.3) 100%);
+  color: var(--text-primary);
+  border-color: var(--border-secondary);
 }
 
 .search-icon {
@@ -44,22 +56,28 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 24px;
-  color: white;
+  color: var(--text-secondary);
 }
 
 .user-profile {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #1a1a2e;
+  background-color: var(--sidebar-bg);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: var(--sidebar-text);
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
   margin-left: 20px;
+  transition: all 0.2s ease;
+}
+
+.user-profile:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 /* Welcome Message styling */
@@ -67,23 +85,24 @@
   text-align: center;
   font-size: 24px;
   margin-bottom: 30px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   padding: 10px;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: var(--bg-primary);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
 }
 
 .username-highlight {
-  color: #1a1a2e;
+  color: var(--brand-primary);
   font-weight: 700;
 }
 
 .section-title {
   font-size: 28px;
   margin-bottom: 20px;
-  color: #000;
+  color: var(--text-primary);
 }
 
 .featured-container {
@@ -102,16 +121,30 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-primary);
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
 }
 
 .character-image {
   flex: 1;
   background: linear-gradient(135deg, #ffecaa, #ffb6c1);
+  position: relative;
+}
+
+.dark-mode .character-image {
+  background: linear-gradient(135deg, #374151, #4b5563);
 }
 
 .character-info {
-  background-color: #1a1a2e;
-  color: white;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
   padding: 15px;
   height: 80px;
 }
@@ -119,11 +152,13 @@
 .character-name {
   font-size: 18px;
   margin-bottom: 5px;
+  color: var(--sidebar-text);
 }
 
 .character-author {
   font-size: 14px;
   opacity: 0.8;
+  color: var(--sidebar-text-secondary);
 }
 
 .creation-container {
@@ -142,11 +177,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #000, #6a11cb);
-  color: white;
+  background: linear-gradient(135deg, var(--text-primary), var(--brand-primary));
+  color: var(--text-inverse);
   font-size: 22px;
   text-align: center;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.creation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
 }
 
 .template-card {
@@ -157,15 +199,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  color: white;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: var(--text-inverse);
   font-size: 22px;
   text-align: center;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.template-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
 }
 
 .like-button-wrapper {
-  position: static;
+  position: absolute;
+  top: 10px;
+  right: 10px;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
@@ -174,21 +225,43 @@
   opacity: 1;
 }
 
+.character-item-like {
+  background-color: var(--bg-primary);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.character-item-like:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
 .footer {
-  background-color: rgba(181, 184, 201, 0.6);
+  background-color: var(--bg-quaternary);
   padding: 20px;
   display: flex;
   justify-content: space-around;
-  color: #222;
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-primary);
 }
 
 .footer a {
-  color: #222;
+  color: var(--text-primary);
   text-decoration: none;
   font-size: 18px;
+  transition: color 0.2s ease;
 }
 
 .footer a:hover {
+  color: var(--brand-primary);
   text-decoration: underline;
 }
 
@@ -198,7 +271,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.5);
+  background-color: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,14 +280,16 @@
 
 .modal-content {
   position: relative;
-  background: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   padding: 20px;
   border-radius: 12px;
   max-width: 30vw;
   max-height: 90vh;
   overflow-y: auto;
   width: fit-content;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-primary);
 }
 
 .modal-close {
@@ -227,11 +302,11 @@
   cursor: pointer;
   opacity: 1;
   transition: none;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .modal-close:hover {
-  color: #e00;
+  color: var(--error);
 }
 
 .featured-container,
@@ -243,4 +318,14 @@
 .featured-container::-webkit-scrollbar,
 .creation-container::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
+}
+
+/* Dark mode specific character card adjustments */
+.dark-mode .character-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-secondary);
+}
+
+.dark-mode .character-card:hover {
+  background-color: var(--bg-tertiary);
 }

@@ -1,18 +1,23 @@
+/* src/pages/Auth.css - Updated with CSS Variables */
+
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f7f7f7;
+  background-color: var(--bg-secondary);
+  transition: background-color 0.2s ease;
 }
 
 .login-form-wrapper {
   width: 100%;
   max-width: 400px;
   padding: 40px;
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-primary);
+  transition: all 0.2s ease;
 }
 
 .login-title {
@@ -20,14 +25,14 @@
   font-weight: bold;
   text-align: center;
   margin-bottom: 10px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .login-subtitle {
   font-size: 18px;
   text-align: center;
   margin-bottom: 30px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .login-form {
@@ -43,26 +48,34 @@
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .login-field input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-primary);
   border-radius: 4px;
   font-size: 16px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
 .login-field input:focus {
-  border-color: #666;
+  border-color: var(--brand-primary);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.login-field input::placeholder {
+  color: var(--text-quaternary);
 }
 
 .login-button {
   padding: 12px;
-  background-color: #4285f4;
-  color: white;
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 4px;
   font-size: 16px;
@@ -73,32 +86,35 @@
 }
 
 .login-button:hover {
-  background-color: #3367d6;
+  background-color: var(--brand-secondary);
 }
 
 .login-button:disabled {
-  background-color: #b3c6e6;
+  background-color: var(--bg-quaternary);
+  color: var(--text-quaternary);
   cursor: not-allowed;
 }
 
 .login-error {
-  color: #d93025;
+  color: var(--error);
   margin-bottom: 20px;
   text-align: center;
   font-size: 14px;
-  background-color: #fce8e6;
+  background-color: var(--error-bg);
   padding: 10px;
   border-radius: 4px;
+  border: 1px solid var(--error-border);
 }
 
 .login-success {
-  color: #0f9d58;
+  color: var(--success);
   margin-bottom: 20px;
   text-align: center;
   font-size: 14px;
-  background-color: #e6f4ea;
+  background-color: var(--success-bg);
   padding: 10px;
   border-radius: 4px;
+  border: 1px solid var(--success-border);
 }
 
 .login-links {
@@ -111,19 +127,36 @@
 .text-button {
   background: none;
   border: none;
-  color: #4285f4;
+  color: var(--brand-primary);
   font-size: 14px;
   cursor: pointer;
   padding: 5px;
   margin: 5px 0;
   text-decoration: underline;
+  transition: color 0.2s ease;
 }
 
 .text-button:hover {
-  color: #3367d6;
+  color: var(--brand-secondary);
 }
 
 .text-button:disabled {
-  color: #b3c6e6;
+  color: var(--text-quaternary);
   cursor: not-allowed;
+}
+
+/* Dark mode specific adjustments */
+.dark-mode .login-form-wrapper {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-xl);
+}
+
+.dark-mode .login-field input {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.dark-mode .login-field input:focus {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
 }

@@ -1,26 +1,28 @@
-/* src/components/ChatSettingsPopup.css */
+/* src/components/ChatSettingsPopup.css - Improved with Better Dark Mode */
 .chat-settings-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .chat-settings-content {
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-xl);
   position: relative;
+  border: 1px solid var(--border-primary);
 }
 
 .chat-settings-header {
@@ -28,34 +30,41 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px 16px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--bg-primary);
 }
 
 .chat-settings-header h2 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--text-primary);
 }
 
 .chat-settings-close {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-settings-close:hover {
-  background-color: #f3f4f6;
-  color: #f44336;
+  background-color: var(--bg-tertiary);
+  color: var(--error);
 }
 
 .chat-settings-body {
   padding: 20px 24px;
+  background-color: var(--bg-primary);
 }
 
 .settings-section {
@@ -65,13 +74,13 @@
 .settings-section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .settings-section-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0 0 20px 0;
   line-height: 1.5;
 }
@@ -83,22 +92,31 @@
 }
 
 .token-option {
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-primary);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  position: relative;
 }
 
 .token-option:hover {
-  border-color: #d1d5db;
-  background-color: #f9fafb;
+  border-color: var(--border-secondary);
+  background-color: var(--bg-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .token-option.selected {
-  border-color: #3b82f6;
-  background-color: #eff6ff;
+  border-color: var(--brand-primary);
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark-mode .token-option.selected {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
 }
 
 .token-option-header {
@@ -114,31 +132,38 @@
 }
 
 .token-option-radio input[type="radio"] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  accent-color: #3b82f6;
+  accent-color: var(--brand-primary);
+  margin: 0;
+}
+
+.token-option.selected .token-option-radio input[type="radio"] {
+  accent-color: var(--text-inverse);
 }
 
 .token-option-title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.token-option.selected .token-option-title {
+  color: var(--text-inverse);
 }
 
 .token-option-description {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   line-height: 1.4;
-  margin-left: 28px;
-}
-
-.token-option.selected .token-option-title {
-  color: #1e40af;
+  margin-left: 30px;
+  margin-top: 4px;
 }
 
 .token-option.selected .token-option-description {
-  color: #3730a3;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .chat-settings-footer {
@@ -146,13 +171,13 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px 20px 24px;
-  border-top: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-top: 1px solid var(--border-primary);
+  background-color: var(--bg-secondary);
   border-radius: 0 0 12px 12px;
 }
 
 .settings-button {
-  padding: 8px 20px;
+  padding: 10px 20px;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
@@ -160,31 +185,57 @@
   transition: all 0.2s;
   border: none;
   min-width: 80px;
+  font-family: inherit;
 }
 
 .settings-button.cancel {
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background-color: var(--bg-quaternary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-secondary);
 }
 
 .settings-button.cancel:hover {
-  background-color: #e5e7eb;
-  color: #1f2937;
+  background-color: var(--border-secondary);
+  color: var(--text-primary);
 }
 
 .settings-button.save {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
 }
 
 .settings-button.save:hover {
-  background-color: #2563eb;
+  background-color: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .settings-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+}
+
+/* Enhanced focus styles for accessibility */
+.token-option:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.settings-button:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Animation for selection */
+.token-option.selected::before {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-inverse);
 }
 
 /* Responsive design */

@@ -1,0 +1,361 @@
+/* src/styles/themes.css - Enhanced with Better Color Schemes */
+
+/* CSS Custom Properties for Light Theme (Default) */
+:root {
+  /* Background Colors - Improved hierarchy */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-quaternary: #e2e8f0;
+  --bg-hover: #f3f4f6;
+  
+  /* Text Colors - Better contrast */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-quaternary: #94a3b8;
+  --text-inverse: #ffffff;
+  --text-muted: #6b7280;
+  
+  /* Border Colors */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-tertiary: #94a3b8;
+  --border-focus: #3b82f6;
+  
+  /* Brand Colors - More vibrant */
+  --brand-primary: #3b82f6;
+  --brand-secondary: #2563eb;
+  --brand-tertiary: #1d4ed8;
+  --brand-light: #dbeafe;
+  --brand-dark: #1e40af;
+  
+  /* Status Colors - Enhanced */
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --success-border: #86efac;
+  --success-light: #dcfce7;
+  
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-border: #fed7aa;
+  --warning-light: #fef3c7;
+  
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-border: #fca5a5;
+  --error-light: #fee2e2;
+  
+  --info: #0891b2;
+  --info-bg: #f0f9ff;
+  --info-border: #7dd3fc;
+  --info-light: #e0f2fe;
+  
+  /* Shadow System - More refined */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.5);
+  --overlay-light: rgba(0, 0, 0, 0.1);
+  --overlay-heavy: rgba(0, 0, 0, 0.7);
+  
+  /* Sidebar specific */
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #f1f5f9;
+  --sidebar-text-secondary: rgba(241, 245, 249, 0.7);
+  --sidebar-border: #334155;
+  --sidebar-hover: rgba(241, 245, 249, 0.1);
+  
+  /* Interactive states */
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --focus-ring-dark: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+/* Dark Theme Variables - Completely redesigned */
+.dark-mode {
+  /* Background Colors - Better depth */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-quaternary: #475569;
+  --bg-hover: #374151;
+  
+  /* Text Colors - Improved readability */
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-quaternary: #94a3b8;
+  --text-inverse: #0f172a;
+  --text-muted: #9ca3af;
+  
+  /* Border Colors - Subtle but visible */
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-tertiary: #64748b;
+  --border-focus: #60a5fa;
+  
+  /* Brand Colors - Adjusted for dark backgrounds */
+  --brand-primary: #60a5fa;
+  --brand-secondary: #3b82f6;
+  --brand-tertiary: #2563eb;
+  --brand-light: #1e3a8a;
+  --brand-dark: #93c5fd;
+  
+  /* Status Colors - Dark mode optimized */
+  --success: #10b981;
+  --success-bg: #064e3b;
+  --success-border: #065f46;
+  --success-light: #022c22;
+  
+  --warning: #f59e0b;
+  --warning-bg: #451a03;
+  --warning-border: #92400e;
+  --warning-light: #1c0701;
+  
+  --error: #f87171;
+  --error-bg: #7f1d1d;
+  --error-border: #991b1b;
+  --error-light: #450a0a;
+  
+  --info: #38bdf8;
+  --info-bg: #0c4a6e;
+  --info-border: #0369a1;
+  --info-light: #082f49;
+  
+  /* Shadow System - Enhanced for dark mode */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.7);
+  --overlay-light: rgba(0, 0, 0, 0.3);
+  --overlay-heavy: rgba(0, 0, 0, 0.8);
+  
+  /* Sidebar specific for dark mode */
+  --sidebar-bg: #020617;
+  --sidebar-text: #f8fafc;
+  --sidebar-text-secondary: rgba(248, 250, 252, 0.7);
+  --sidebar-border: #1e293b;
+  --sidebar-hover: rgba(248, 250, 252, 0.1);
+  
+  /* Interactive states */
+  --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  --focus-ring-dark: 0 0 0 3px rgba(96, 165, 250, 0.3);
+}
+
+/* Global Dark Mode Styles */
+.dark-mode {
+  color-scheme: dark;
+}
+
+/* Improved transitions for all elements */
+*, *::before, *::after {
+  transition: 
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-tertiary);
+  border-radius: 4px;
+  border: 1px solid var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-quaternary);
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--border-tertiary);
+  border-color: var(--bg-tertiary);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-quaternary);
+}
+
+/* Enhanced form elements */
+input, textarea, select {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-quaternary);
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.dark-mode input:focus,
+.dark-mode textarea:focus,
+.dark-mode select:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring-dark);
+}
+
+/* Enhanced button styles */
+button:not(.theme-toggle-button):not(.login-button):not(.chat-send-button) {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+button:not(.theme-toggle-button):not(.login-button):not(.chat-send-button):hover {
+  background-color: var(--bg-quaternary);
+  border-color: var(--border-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+button:not(.theme-toggle-button):not(.login-button):not(.chat-send-button):focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.dark-mode button:not(.theme-toggle-button):not(.login-button):not(.chat-send-button):focus {
+  box-shadow: var(--focus-ring-dark);
+}
+
+/* Enhanced modal and popup styles */
+.modal-content,
+.chat-popup-content,
+.scenario-popup-content,
+.chat-settings-content,
+.user-settings-popup-content {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Enhanced dropdown styles */
+.search-results-dropdown {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-result:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Enhanced card styles */
+.character-card,
+.character-item,
+.friend-item {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.character-card:hover,
+.character-item:hover,
+.friend-item:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Chat specific enhancements */
+.chat-message-assistant {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+/* Enhanced status message styles */
+.login-error,
+.chat-error,
+.scenario-error,
+.error-message {
+  background-color: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
+}
+
+.login-success,
+.success-message {
+  background-color: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+/* Print styles */
+@media print {
+  .dark-mode {
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --border-primary: #cccccc;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-primary: #000000;
+    --border-secondary: #333333;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+  }
+  
+  .dark-mode {
+    --border-primary: #ffffff;
+    --border-secondary: #cccccc;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+  }
+}

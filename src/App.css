@@ -1,3 +1,5 @@
+/* src/App.css - Updated with CSS Variables */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,11 +8,14 @@
 
 body {
   font-family: Arial, sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--bg-secondary);
 }
 
 .loading {
@@ -19,7 +24,8 @@ body {
   align-items: center;
   height: 100vh;
   font-size: 18px;
-  color: #666;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
 }
 
 .dashboard-container {
@@ -27,29 +33,32 @@ body {
   flex-direction: row;
   align-items: stretch;
   height: 100vh;
+  background-color: var(--bg-secondary);
 }
 
 .dashboard {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px;
+  background-color: var(--bg-primary);
 }
 
 .dashboard h1 {
   margin-bottom: 20px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .dashboard p {
   margin-bottom: 20px;
   line-height: 1.5;
+  color: var(--text-secondary);
 }
 
 .logout-button, .chat {
   margin-top: 20px;
   padding: 10px 16px;
-  background-color: #4285f4;
-  color: white;
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -58,21 +67,21 @@ body {
 }
 
 .logout-button {
-  background-color: #f44336;
+  background-color: var(--error);
 }
 
 .logout-button:hover {
-  background-color: #d32f2f;
+  background-color: #dc2626;
 }
 
 .chat:hover {
-  background-color: #3367d6;
+  background-color: var(--brand-secondary);
 }
 
 button {
   padding: 8px 16px;
-  background-color: #4285f4;
-  color: white;
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -82,7 +91,13 @@ button {
 }
 
 button:hover {
-  background-color: #3367d6;
+  background-color: var(--brand-secondary);
+}
+
+button:disabled {
+  background-color: var(--bg-quaternary);
+  color: var(--text-quaternary);
+  cursor: not-allowed;
 }
 
 .sidebar {
@@ -94,4 +109,42 @@ button:hover {
   flex: 1;
   overflow: auto;
   margin-left: 130px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Dark mode specific overrides */
+.dark-mode .main-content {
+  background-color: var(--bg-primary);
+}
+
+.dark-mode .dashboard-container {
+  background-color: var(--bg-primary);
+}
+
+/* Form elements */
+input, textarea, select {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--brand-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dark mode adjustments for inputs */
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.dark-mode input:focus,
+.dark-mode textarea:focus,
+.dark-mode select:focus {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
 }
