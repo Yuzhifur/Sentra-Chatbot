@@ -3,7 +3,7 @@
     "@anthropic-ai/sdk": "^0.40.1",
     "@babel/runtime": "^7.27.1",
     "axios": "^1.9.0",
-    "firebase": "^11.6.0",
+    "firebase": "^11.8.0",
     "next": "^15.2.1",
     "node": "^22.15.0",
     "react": "^18.3.1",
