@@ -138,6 +138,8 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
     return "Chat";
   };
 
+  require('/./src/img/icon-delete.png')
+
   return (
     <div className="sidebar">
       <div className="sidebar-top">
@@ -184,7 +186,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                             <span className="chat-item-title">{getDisplayTitle(chat)}</span>
                           </div>
                         </div>
-                        <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
+                        <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">
+                          <img src="/img/icon-delete.png" alt="Delete" width={18} height={18} />
+                        </button>
                       </div>
                   ))}
                 </div>
@@ -210,7 +214,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                           <span className="chat-item-title">{getDisplayTitle(chat)}</span>
                         </div>
                       </div>
-                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
+                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">
+                        <img src="/img/icon-delete.png" alt="Delete" width={18} height={18} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -236,7 +242,9 @@ const Sidebar: React.FC<SidebarProps> = ({ doResetDashboard }) => {
                           <span className="chat-item-title">{getDisplayTitle(chat)}</span>
                         </div>
                       </div>
-                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">🗑️</button>
+                      <button className="delete-button" onClick={() => handleDeleteChat(chat.id)} title="Delete chat">
+                        <img src="/img/icon-delete.png" alt="Delete" width={18} height={18} />
+                      </button>
                     </div>
                   ))}
                 </div>
