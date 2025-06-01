@@ -100,6 +100,7 @@
   margin-bottom: 5px;
   width: 100%;
   color: var(--sidebar-text);
+  background-color: transparent;
 }
 
 .chat-item:hover {
@@ -111,12 +112,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
-  color: var(--sidebar-text-secondary);
+  background: var(--text-quaternary) !important;
+  border: none !important;
   cursor: pointer;
   font-size: 14px;
-  transition: color 0.2s;
+  transition: color 0.2s !important;
   padding: 4px 6px;
 }
 

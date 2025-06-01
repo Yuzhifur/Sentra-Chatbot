@@ -96,7 +96,7 @@
 }
 
 .submit-button {
-  background-color: #4285f4;
+  background-color: #4285f4 !important;
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -156,11 +156,11 @@
   .character-creation-main-content {
       padding: 1rem;
   }
-  
+
   .charaacter-creation-section {
       max-width: 100%;
   }
-  
+
   .submit-button {
       width: 100%;
       max-width: 300px;

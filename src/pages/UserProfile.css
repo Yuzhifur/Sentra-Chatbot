@@ -335,7 +335,6 @@
   margin-top: 15px;
   padding: 8px 10px;
   color: var(--text-inverse);
-  background-color: var(--brand-primary);
   border: none;
   border-radius: 20px;
   text-decoration: none;
@@ -646,7 +645,7 @@
 
 .dark-mode .theme-toggle-section .theme-toggle-container:hover {
   border-color: var(--brand-primary);
-  box-shadow: 
+  box-shadow:
     var(--shadow-lg),
     0 0 20px rgba(96, 165, 250, 0.1);
 }
