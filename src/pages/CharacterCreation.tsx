@@ -7,6 +7,7 @@ import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, getDoc, s
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FirebaseService } from '../services/FirebaseService';
 import { CharacterService } from '../services/CharacterService';
+import { ImageGenService } from '../services/ImageGenService'; // NEW IMPORT
 
 // Functional wrapper component that provides navigate and params
 const CharacterCreationWrapper: React.FC = () => {
@@ -97,8 +98,12 @@ type CharacterCreationState = {
   success: string | null;
   avatarFile: File | null;
   avatarPreview: string | null;
-}
 
+  // NEW: Avatar Generation State
+  generatingAvatar: boolean;
+  generationError: string | null;
+  generationHint: string;
+}
 export class CharacterCreation extends Component<CharacterCreationProps, CharacterCreationState> {
   constructor(props: CharacterCreationProps) {
     super(props);
@@ -139,8 +144,83 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
       success: null,
       avatarFile: null,
       avatarPreview: initialData.avatar || null,
+
+      // NEW: Avatar Generation State
+      generatingAvatar: false,
+      generationError: null,
+      generationHint: 'Fill in character details to generate an AI avatar.'
     };
   }
+
+  updateGenerationHint = () => {
+    const characterData = {
+      name: this.state.name,
+      age: typeof this.state.age === 'number' ? this.state.age : undefined,
+      gender: this.state.gender,
+      species: this.state.species,
+      characterDescription: this.state.characterDescription,
+      temperament: this.state.temperament,
+      appearance: this.state.appearance,
+      outfit: this.state.outfit,
+      job: this.state.job,
+      specialAbility: this.state.specialAbility
+    };
+
+    const hint = ImageGenService.getGenerationHint(characterData);
+    this.setState({ generationHint: hint });
+  };
+
+
+  handleGenerateAvatar = async () => {
+    this.setState({
+      generatingAvatar: true,
+      generationError: null
+    });
+
+    try {
+      const characterData = {
+        name: this.state.name,
+        age: typeof this.state.age === 'number' ? this.state.age : undefined,
+        gender: this.state.gender,
+        species: this.state.species,
+        characterDescription: this.state.characterDescription,
+        temperament: this.state.temperament,
+        appearance: this.state.appearance,
+        outfit: this.state.outfit,
+        job: this.state.job,
+        specialAbility: this.state.specialAbility
+      };
+
+      // Generate avatar file
+      const avatarFile = await ImageGenService.generateAvatar(characterData);
+
+      // Set the generated avatar as the current avatar
+      this.setState({
+        avatarFile: avatarFile,
+        avatarPreview: URL.createObjectURL(avatarFile),
+        generatingAvatar: false,
+        generationError: null
+      });
+
+    } catch (error) {
+      console.error('Avatar generation failed:', error);
+      this.setState({
+        generatingAvatar: false,
+        generationError: error instanceof Error ? error.message : 'Failed to generate avatar'
+      });
+    }
+  };
+
+  // NEW: Check if generation button should be enabled
+  isGenerationEnabled = (): boolean => {
+    const characterData = {
+      name: this.state.name,
+      characterDescription: this.state.characterDescription,
+      temperament: this.state.temperament
+    };
+
+    return ImageGenService.validateMinimumFields(characterData) && !this.state.generatingAvatar;
+  };
 
   toggleSection = (section: string) => {
     this.setState(prev => ({
@@ -152,14 +232,13 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
     const { name, value } = e.target;
 
     if (name === 'age') {
-      // Handle age as number or empty string
       this.setState({
         [name]: value === '' ? '' : parseInt(value, 10) || 0
-      } as any);
+      } as any, this.updateGenerationHint);
     } else {
       this.setState({
         [name]: value
-      } as any);
+      } as any, this.updateGenerationHint);
     }
   };
 
@@ -212,23 +291,23 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
     const filtered = e.target.value.replace(/[#,]/g, "");
     this.setState({ tagInput: filtered });
   };
-  
+
   handleAddTag = () => {
     const newTag = this.state.tagInput.trim().toLowerCase();
-  
+
     if (!newTag || this.state.tags.includes(newTag)) return;
-  
+
     this.setState(prev => ({
       tags: [...prev.tags, newTag],
       tagInput: ''
     }));
   };
-  
+
   handleRemoveTag = (tagToRemove: string) => {
     this.setState(prev => ({
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
-  };  
+  };
 
   doSubmitClick = async (_evt: MouseEvent<HTMLButtonElement>): Promise<void> => {
     if (!this.validateForm()) return;
@@ -369,12 +448,12 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
         // Add character to Firestore
         const charactersRef = collection(db, 'characters');
         const newCharacterRef = await addDoc(charactersRef, characterData);
-        
+
         // Add the tags to Firestore
         for (const tag of this.state.tags) {
           const tagRef = doc(db, 'tags', tag);
           const tagCharRef = doc(tagRef, 'characters', newCharacterRef.id);
-        
+
           await setDoc(tagRef, {
             tagName: tag,
             characterCount: increment(1)
@@ -446,21 +525,78 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
             </div>
             {this.state.openSection === "basic" && (
               <div className="charaacter-creation-section-content">
+
+                {/* UPDATED: Avatar Upload Section with Generation */}
                 <div className="form-group">
                   <label>Character Avatar:</label>
                   <div className="avatar-upload-container">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={this.handleAvatarChange}
-                      style={{ marginBottom: '10px' }}
-                    />
-                    {this.state.avatarPreview && (
-                      <img
-                        src={this.state.avatarPreview}
-                        alt="Avatar preview"
-                        className="avatar-preview"
+
+                    {/* Generation Section */}
+                    <div className="avatar-generation-section">
+                      <div className="generation-controls">
+                        <button
+                          type="button"
+                          className="generate-avatar-button"
+                          onClick={this.handleGenerateAvatar}
+                          disabled={!this.isGenerationEnabled()}
+                        >
+                          {this.state.generatingAvatar ? (
+                            <>
+                              <span className="loading-spinner">⏳</span>
+                              Generating Avatar...
+                            </>
+                          ) : (
+                            <>
+                              <span className="ai-icon">🎨</span>
+                              Generate AI Avatar
+                            </>
+                          )}
+                        </button>
+
+                        <div className="generation-hint">
+                          💡 {this.state.generationHint}
+                        </div>
+                      </div>
+
+                      {/* Generation Error */}
+                      {this.state.generationError && (
+                        <div className="generation-error">
+                          ⚠️ {this.state.generationError}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="upload-divider">
+                      <span>OR</span>
+                    </div>
+
+                    {/* Traditional Upload */}
+                    <div className="traditional-upload-section">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={this.handleAvatarChange}
+                        style={{ marginBottom: '10px' }}
                       />
+                      <div className="upload-help-text">
+                        Upload your own image file
+                      </div>
+                    </div>
+
+                    {/* Avatar Preview */}
+                    {this.state.avatarPreview && (
+                      <div className="avatar-preview-container">
+                        <img
+                          src={this.state.avatarPreview}
+                          alt="Avatar preview"
+                          className="avatar-preview"
+                        />
+                        <div className="avatar-preview-label">
+                          {this.state.avatarFile?.name?.includes('_avatar.png') ?
+                            'AI Generated Avatar' : 'Uploaded Avatar'}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -576,6 +712,7 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                   />
                 </div>
 
+                {/* UPDATED: Appearance with Avatar Generation Hint */}
                 <div className="form-group">
                   <label>Appearance:</label>
                   <textarea
@@ -584,6 +721,9 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                     onChange={this.handleInputChange}
                     placeholder="Physical description of the character..."
                   />
+                  <div className="field-help-text">
+                    💡 This directly improves AI avatar quality
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -611,13 +751,14 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
             )}
           </div>
 
-          {/* Personality Section */}
+          {/* Personality Section - IMPORTANT for generation */}
           <div className="charaacter-creation-section">
             <div
               className={`charaacter-creation-section-header ${this.state.openSection === "personality" ? "open" : ""}`}
               onClick={() => this.toggleSection("personality")}
             >
               Personality *
+              <span className="generation-importance">⭐ Important for AI Avatar</span>
               <span className={`charaacter-creation-section-arrow ${this.state.openSection === "personality" ? "open" : ""}`}>
                 ▶
               </span>
@@ -633,6 +774,9 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                     placeholder="Character's personality traits and general disposition..."
                     required
                   />
+                  <div className="field-help-text">
+                    💡 Essential for generating character's facial expression and demeanor
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -648,13 +792,14 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
             )}
           </div>
 
-          {/* Advanced Section */}
+          {/* Advanced Section - HELPFUL for generation */}
           <div className="charaacter-creation-section">
             <div
               className={`charaacter-creation-section-header ${this.state.openSection === "advanced" ? "open" : ""}`}
               onClick={() => this.toggleSection("advanced")}
             >
               Advanced
+              <span className="generation-helpful">✨ Helpful for AI Avatar</span>
               <span className={`charaacter-creation-section-arrow ${this.state.openSection === "advanced" ? "open" : ""}`}>
                 ▶
               </span>
@@ -689,6 +834,9 @@ export class CharacterCreation extends Component<CharacterCreationProps, Charact
                     onChange={this.handleInputChange}
                     placeholder="What does the character typically wear?"
                   />
+                  <div className="field-help-text">
+                    💡 This helps generate appropriate clothing and accessories in the avatar
+                  </div>
                 </div>
               </div>
             )}

@@ -1,9 +1,10 @@
+// src/index.tsx
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// NEW: Import Firebase AI Logic
+import { getAI, GoogleAIBackend } from "firebase/ai";
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -12,11 +13,10 @@ import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { BrowserRouter } from 'react-router-dom';
-import { App } from './App'; // Fix: there is app and App
+import { App } from './App';
 import './index.css';
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "sentra-4114a.firebaseapp.com",
@@ -35,14 +35,28 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-let appCheck;
-if (window.location.hostname !== 'localhost' &&
-  window.location.hostname !== '127.0.0.1') {
-  appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('6LcCxB8rAAAAAARP0L6WZ_oDKY8MUyXvGznMxFO7'),
-    isTokenAutoRefreshEnabled: true
-  });
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6LfX4FErAAAAAJZ30GtWFskgSKQJuCqeJ7i9FnXP'),
+});
+
+console.log("Check if appCheck is valid:");
+console.log(appCheck)
+
+// NEW: Initialize Firebase AI Logic
+let ai: any = null;
+try {
+  ai = getAI(app, { backend: new GoogleAIBackend() });
+  console.log('Firebase AI Logic initialized successfully');
+} catch (error) {
+  console.warn('Firebase AI Logic initialization failed:', error);
+  console.warn('Avatar generation will not be available');
 }
+
+// Export Firebase instances for use in other modules
+export { app as default, db, storage, auth, functions, ai };
+
+
+
 
 if (window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1') {
@@ -51,6 +65,9 @@ if (window.location.hostname === 'localhost' ||
   connectAuthEmulator(auth, 'http://localhost:9099');
   connectStorageEmulator(storage, 'localhost', 9199);
   connectFunctionsEmulator(functions, 'localhost', 5001);
+
+  // Note: Firebase AI Logic emulator is not available yet
+  // Avatar generation will use the live service even in development
 }
 
 const root = ReactDOM.createRoot(

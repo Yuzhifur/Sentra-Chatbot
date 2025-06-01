@@ -142,6 +142,210 @@
   margin-top: 0.5rem;
 }
 
+/* NEW: Avatar Generation Section */
+.avatar-generation-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px dashed #0ea5e9;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.generation-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.generate-avatar-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.generate-avatar-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.generate-avatar-button:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ai-icon {
+  font-size: 1.2rem;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  font-size: 1.2rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.generation-hint {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.generation-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  border: 1px solid #fecaca;
+  margin-top: 12px;
+}
+
+/* NEW: Upload Divider */
+.upload-divider {
+  position: relative;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.upload-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.upload-divider span {
+  background: #f7fafc;
+  padding: 0 15px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* NEW: Traditional Upload Section */
+.traditional-upload-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.upload-help-text {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+/* NEW: Avatar Preview Container */
+.avatar-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.avatar-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-preview-label {
+  background: #1f2937;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* NEW: Section Importance Indicators */
+.generation-importance {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 12px;
+}
+
+.generation-helpful {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 12px;
+}
+
+/* NEW: Field Help Text */
+.field-help-text {
+  color: #6366f1;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Responsive Design for Generation Section */
+@media (max-width: 768px) {
+  .avatar-generation-section {
+    padding: 16px;
+  }
+
+  .generate-avatar-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    min-width: 160px;
+  }
+
+  .generation-hint {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .avatar-preview {
+    width: 120px;
+    height: 120px;
+  }
+
+  .generation-importance,
+  .generation-helpful {
+    display: none; /* Hide on mobile to save space */
+  }
+}
+
 .avatar-preview {
   width: 150px;
   height: 150px;
