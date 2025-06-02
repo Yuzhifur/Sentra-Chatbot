@@ -355,7 +355,7 @@ export class FirebaseService {
         const updatedLikedCharacterList = currentList.filter((id: string) => id !== characterId);
 
         await updateDoc(userRef, {
-          userLikedCharacters: updatedLikedCharacterList 
+          userLikedCharacters: updatedLikedCharacterList
         });
       }
     } catch (error) {
@@ -690,5 +690,19 @@ export class FirebaseService {
       console.error("Error getting friend count:", error);
       return 0;
     }
+  }
+
+  /**
+   * Get current user ID
+   */
+  static getCurrentUserId(): string {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error('No user is currently logged in');
+    }
+
+    return currentUser.uid;
   }
 }

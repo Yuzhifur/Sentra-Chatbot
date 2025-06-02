@@ -6,6 +6,8 @@ import { ChatService, Message } from '../services/ChatService';
 import { CharacterService } from '../services/CharacterService';
 import ChatTitleEditor from '../components/ChatTitleEditor';
 import ChatSettingsPopup from '../components/ChatSettingsPopup';
+import MentionDropdown from '../components/MentionDropdown';
+import { CFMService } from '../services/CFMService';
 import './Chat.css';
 import '../components/ChatTitleEditor.css';
 
@@ -187,11 +189,17 @@ type ChatState = {
   currentTokenLimit: number;
   streamingMessage: string | null; // NEW: For streaming content
   isStreaming: boolean; // NEW: Streaming state
+  showMentionDropdown: boolean;
+  mentionSearchTerm: string;
+  mentionPosition: { top: number; left: number };
+  cursorPosition: number;
+  validMentions: string[]; // Track validated mentions
 };
 
 export class Chat extends Component<ChatProps, ChatState> {
   private messagesEndRef: React.RefObject<HTMLDivElement>;
   private streamingAbortController: AbortController | null = null; // NEW: For aborting streams
+  private inputRef: React.RefObject<HTMLTextAreaElement>; // NEW: ref for textarea
 
   constructor(props: ChatProps) {
     super(props);
@@ -211,8 +219,14 @@ export class Chat extends Component<ChatProps, ChatState> {
       currentTokenLimit: 1024,
       streamingMessage: null, // NEW
       isStreaming: false, // NEW
+      showMentionDropdown: false,
+      mentionSearchTerm: '',
+      mentionPosition: { top: 0, left: 0 },
+      cursorPosition: 0,
+      validMentions: [],
     };
     this.messagesEndRef = React.createRef();
+    this.inputRef = React.createRef(); // NEW
   }
 
   async componentDidMount() {
@@ -333,8 +347,126 @@ export class Chat extends Component<ChatProps, ChatState> {
   };
 
   handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    this.setState({ input: e.target.value });
+    const { value, selectionStart } = e.target as HTMLTextAreaElement;
+    this.setState({ input: value, cursorPosition: selectionStart || 0 });
+
+    // Check for @ mentions
+    this.checkForMention(value, selectionStart || 0);
   };
+
+  checkForMention = (text: string, cursorPos: number) => {
+    // Find the most recent @ before cursor
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex === -1) {
+      this.setState({ showMentionDropdown: false });
+      return;
+    }
+
+    // Check if we're in the middle of typing a mention
+    const textAfterAt = text.substring(lastAtIndex + 1, cursorPos);
+    const spaceIndex = textAfterAt.indexOf(' ');
+
+    // If there's a space after @, we're not in a mention
+    if (spaceIndex !== -1) {
+      this.setState({ showMentionDropdown: false });
+      return;
+    }
+
+    // If the character right before @ is not a space or start of string, don't show dropdown
+    if (lastAtIndex > 0 && text[lastAtIndex - 1] !== ' ') {
+      this.setState({ showMentionDropdown: false });
+      return;
+    }
+
+    // Calculate dropdown position
+    if (this.inputRef.current) {
+      const rect = this.inputRef.current.getBoundingClientRect();
+      // Simple positioning - can be improved with more sophisticated text measurement
+      this.setState({
+        showMentionDropdown: true,
+        mentionSearchTerm: textAfterAt,
+        mentionPosition: {
+          top: rect.top - 200, // Show above input
+          left: rect.left + 50 // Rough estimate
+        }
+      });
+    }
+  };
+
+  handleMentionSelect = (username: string) => {
+    const { input, cursorPosition } = this.state;
+
+    // Find the @ position
+    const textBeforeCursor = input.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex === -1) return;
+
+    // Replace the partial mention with the full username
+    const beforeMention = input.substring(0, lastAtIndex);
+    const afterCursor = input.substring(cursorPosition);
+    const newInput = `${beforeMention}@${username} ${afterCursor}`;
+
+    // Update state and track valid mention
+    this.setState({
+      input: newInput,
+      showMentionDropdown: false,
+      validMentions: [...this.state.validMentions, username],
+      cursorPosition: lastAtIndex + username.length + 2 // Position after space
+    }, () => {
+      // Focus and set cursor position
+      if (this.inputRef.current) {
+        this.inputRef.current.focus();
+        this.inputRef.current.setSelectionRange(
+          this.state.cursorPosition,
+          this.state.cursorPosition
+        );
+      }
+    });
+  };
+
+  closeMentionDropdown = () => {
+    this.setState({ showMentionDropdown: false });
+  };
+
+  formatMessageContent = (content: string): JSX.Element => {
+    // Find all @mentions and make them bold/blue
+    const mentionRegex = /@(\w+)/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      // Add text before mention
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index));
+      }
+
+      // Add formatted mention
+      const username = match[1];
+      const isValid = this.state.validMentions.includes(username);
+      parts.push(
+        <span
+          key={match.index}
+          className={`mention ${isValid ? 'valid' : ''}`}
+        >
+          @{username}
+        </span>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+
+    return <>{parts}</>;
+  };
+
 
   handleEditingContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     this.setState({ editingContent: e.target.value });
@@ -514,7 +646,10 @@ export class Chat extends Component<ChatProps, ChatState> {
       showSettingsPopup,
       currentTokenLimit,
       streamingMessage,
-      isStreaming
+      isStreaming,
+      showMentionDropdown,
+      mentionSearchTerm,
+      mentionPosition
     } = this.state;
 
     return (
@@ -626,7 +761,10 @@ export class Chat extends Component<ChatProps, ChatState> {
                     </div>
                   ) : (
                     <div className="chat-message-content" style={{ whiteSpace: 'pre-line' }}>
-                      {message.content}
+                      {message.role === 'user'
+                        ? this.formatMessageContent(message.content)
+                        : message.content
+                      }
                     </div>
                   )}
                 </div>
@@ -663,6 +801,7 @@ export class Chat extends Component<ChatProps, ChatState> {
 
           <form className="chat-input-form" onSubmit={this.handleSubmit}>
             <textarea
+              ref={this.inputRef}
               className="chat-input"
               value={input}
               onChange={this.handleInputChange}
@@ -670,7 +809,7 @@ export class Chat extends Component<ChatProps, ChatState> {
               disabled={isLoading || editingMessageIndex !== null || isStreaming}
               rows={1}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === 'Enter' && !e.shiftKey && !showMentionDropdown) {
                   e.preventDefault();
                   this.handleSubmit(e);
                 }
@@ -686,8 +825,22 @@ export class Chat extends Component<ChatProps, ChatState> {
           </form>
         </div>
 
+        {/* Mention Dropdown */}
+        {showMentionDropdown && (
+          <MentionDropdown
+            searchTerm={mentionSearchTerm}
+            onSelect={this.handleMentionSelect}
+            onClose={this.closeMentionDropdown}
+            position={mentionPosition}
+          />
+        )}
+
+        {/* Settings Popup with chatId */}
         {showSettingsPopup && (
-          <ChatSettingsPopup onClose={this.handleCloseSettings} />
+          <ChatSettingsPopup
+            onClose={this.handleCloseSettings}
+            chatId={this.props.chatId}
+          />
         )}
       </div>
     );

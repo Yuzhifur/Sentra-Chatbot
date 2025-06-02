@@ -77,7 +77,7 @@ interface Character {
 export const processChatStream = onRequest({
   secrets: [claudeApiKey],
   maxInstances: 10,
-  timeoutSeconds: 300, // Increase timeout for streaming
+  timeoutSeconds: 90,
   cors: true,
 }, async (req, res) => {
   // Handle CORS
@@ -106,8 +106,7 @@ export const processChatStream = onRequest({
         return;
       }
 
-      const { messages, characterId, customScenario, tokenLimit = 1024 } = data;
-      // sessionId available if needed for logging: data.sessionId
+      const { messages, characterId, customScenario, tokenLimit = 1024, cfmMemories = [] } = data;
 
       // Validate tokenLimit
       const validTokenLimits = [256, 512, 1024];
@@ -130,8 +129,17 @@ export const processChatStream = onRequest({
         'Access-Control-Allow-Origin': '*',
       });
 
-      // Create system prompt
-      const systemPrompt = buildCharacterPrompt(character, customScenario);
+      // Create system prompt with CFM memories
+      let systemPrompt = buildCharacterPrompt(character, customScenario);
+
+      // NEW: Append CFM memories to system prompt
+      if (cfmMemories && cfmMemories.length > 0) {
+        systemPrompt += '\n\n# CROSS-FRIENDS MEMORIES\n';
+        systemPrompt += 'The following are your memories from interactions with friends of the current user:\n\n';
+        systemPrompt += cfmMemories.join('\n\n');
+        systemPrompt += '\n\nUse these memories naturally in conversation when relevant, as if recalling shared experiences.';
+      }
+
       const userMessage = messages[messages.length - 1];
       const conversationHistory = formatConversationHistory(messages.slice(0, -1));
 

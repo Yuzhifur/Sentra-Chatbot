@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions'
+import { CFMService } from './CFMService';
 
 export interface Message {
   role: string;  // 'user' or 'assistant'
@@ -38,6 +39,8 @@ export interface ChatData {
   title?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  CFM_enabled?: boolean;
+  CFM_enabledAt?: Timestamp;
 }
 
 export interface StreamingCallbacks {
@@ -282,6 +285,15 @@ export class ChatService {
         lastUpdated: Timestamp.now()
       });
 
+      // NEW: Update CFM memory if enabled
+      const isCFMEnabled = await CFMService.isCFMEnabled(chatId);
+      if (isCFMEnabled) {
+        // Update memory asynchronously (don't block message sending)
+        CFMService.updateChatMemory(chatId).catch(error => {
+          console.error("Error updating CFM memory:", error);
+        });
+      }
+
       return userMessage;
     } catch (error) {
       console.error("Error sending message:", error);
@@ -477,6 +489,35 @@ export class ChatService {
       // Get current messages
       const messages = await this.getChatMessages(chatId);
 
+      // NEW: Check for @mentions and prepare CFM data
+      const lastUserMessage = messages[messages.length - 1];
+      let cfmMemories: string[] = [];
+
+      if (lastUserMessage && lastUserMessage.role === 'user') {
+        const mentions = CFMService.parseMentions(lastUserMessage.content);
+
+        for (const username of mentions) {
+          const friendUserId = await CFMService.getUserIdFromUsername(username);
+
+          if (friendUserId) {
+            const memories = await CFMService.getFriendMemories(
+              friendUserId,
+              chatData.characterId
+            );
+
+            if (memories) {
+              const formattedMemory = CFMService.formatMemoriesForSystem(
+                memories,
+                username
+              );
+              cfmMemories.push(formattedMemory);
+            } else {
+              cfmMemories.push(`System: You have no memories with ${username}.`);
+            }
+          }
+        }
+      }
+
       // Get auth token
       const auth = getAuth();
       const currentUser = auth.currentUser;
@@ -495,13 +536,14 @@ export class ChatService {
         functionsUrl = 'https://us-central1-sentra-4114a.cloudfunctions.net/processChatStream';
       }
 
-      // Prepare request data
+      // Prepare request data with CFM memories
       const requestData = {
         messages,
         characterId: chatData.characterId,
         sessionId: chatId,
         customScenario: chatData.scenario,
-        tokenLimit
+        tokenLimit,
+        cfmMemories // NEW: Include CFM memories
       };
 
       // Create EventSource for SSE
