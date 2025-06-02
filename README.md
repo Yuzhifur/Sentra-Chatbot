@@ -1,4 +1,4 @@
-# Sentra: Immersive AI Roleplay Chatbots V1.1.0
+# Sentra: Immersive AI Roleplay Chatbots V1.1.2
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
@@ -157,7 +157,7 @@ Firestore Database
 
 ---
 
-## 🧪 Current Available Use Cases (May 28, 2025, V1.1.0)
+## 🧪 Current Available Use Cases (June 1st, 2025, V1.1.2)
 
 Sentra supports the following key features and workflows for users:
 
@@ -229,6 +229,15 @@ Sentra supports the following key features and workflows for users:
   - "Remove Friend" button for existing friends
   - "Request Pending" status for sent requests
 - **Privacy**: Only you can view your own friends list and pending requests
+
+### 9. 🌗 Theme System
+- **Change theme**: Users can switch between light and dark theme in their user profile page
+  - Only in their own user profile, not other user's
+
+### 10. 🎨 Character Avatar Generation
+- **Generate Character Avatar**: Don't have a good avatar for your character? Try generating one!
+  - Generate an avatar based on filled information in character edit page
+  - Requires minimum character information to be filled
 
 ---
 
