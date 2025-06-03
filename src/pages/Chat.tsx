@@ -355,6 +355,38 @@ export class Chat extends Component<ChatProps, ChatState> {
   };
 
   checkForMention = (text: string, cursorPos: number) => {
+    // Count existing mentions in the text
+    const mentionRegex = /@(\w+)/g;
+    const existingMentions = new Set<string>();
+    let match;
+
+    while ((match = mentionRegex.exec(text)) !== null) {
+      existingMentions.add(match[1].toLowerCase());
+    }
+
+    // Check if we've reached the limit of 3 unique mentions
+    if (existingMentions.size >= 3) {
+      // Check if we're editing an existing mention
+      const textBeforeCursor = text.substring(0, cursorPos);
+      const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+      if (lastAtIndex !== -1) {
+        // Check if this @ is part of an existing mention
+        const textAfterAt = text.substring(lastAtIndex + 1, cursorPos);
+        const mentionEndIndex = lastAtIndex + 1 + textAfterAt.search(/\s|$/);
+        const fullMention = text.substring(lastAtIndex + 1, mentionEndIndex).replace(/\W/g, '');
+
+        // If this mention already exists in our set, allow editing
+        if (!existingMentions.has(fullMention.toLowerCase())) {
+          this.setState({ showMentionDropdown: false });
+          return;
+        }
+      } else {
+        this.setState({ showMentionDropdown: false });
+        return;
+      }
+    }
+
     // Find the most recent @ before cursor
     const textBeforeCursor = text.substring(0, cursorPos);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
@@ -398,6 +430,24 @@ export class Chat extends Component<ChatProps, ChatState> {
   handleMentionSelect = (username: string) => {
     const { input, cursorPosition } = this.state;
 
+    // Count existing unique mentions before adding new one
+    const mentionRegex = /@(\w+)/g;
+    const existingMentions = new Set<string>();
+    let match;
+
+    while ((match = mentionRegex.exec(input)) !== null) {
+      existingMentions.add(match[1].toLowerCase());
+    }
+
+    // Check if this username already exists (case-insensitive)
+    if (!existingMentions.has(username.toLowerCase())) {
+      // If we already have 3 unique mentions, don't add more
+      if (existingMentions.size >= 3) {
+        this.setState({ showMentionDropdown: false });
+        return;
+      }
+    }
+
     // Find the @ position
     const textBeforeCursor = input.substring(0, cursorPosition);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
@@ -426,6 +476,7 @@ export class Chat extends Component<ChatProps, ChatState> {
       }
     });
   };
+
 
   closeMentionDropdown = () => {
     this.setState({ showMentionDropdown: false });

@@ -496,7 +496,10 @@ export class ChatService {
       if (lastUserMessage && lastUserMessage.role === 'user') {
         const mentions = CFMService.parseMentions(lastUserMessage.content);
 
-        for (const username of mentions) {
+        // Deduplicate mentions and limit to 3
+        const uniqueMentions = Array.from(new Set(mentions.map(m => m.toLowerCase()))).slice(0, 3);
+
+        for (const username of uniqueMentions) {
           const friendUserId = await CFMService.getUserIdFromUsername(username);
 
           if (friendUserId) {
