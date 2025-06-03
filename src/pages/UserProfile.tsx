@@ -397,6 +397,27 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleShareProfile = () => {
+    if (!userId && !isOwnProfile) {
+      alert("Unable to share this profile.");
+      return;
+    }
+
+    // Generate the shareable link
+    const profileId = userId || getAuth().currentUser?.uid;
+    const shareableLink = `${window.location.origin}/profile/${profileId}`;
+
+    // Copy the link to the clipboard
+    navigator.clipboard.writeText(shareableLink)
+      .then(() => {
+        alert("Profile link copied to clipboard!");
+      })
+      .catch((error) => {
+        console.error("Failed to copy link to clipboard:", error);
+        alert("Failed to copy the link. Please try again.");
+      });
+  };
+
   return (
     <div className="user-profile-page">
       {/* Sidebar */}
@@ -465,7 +486,7 @@ const UserProfile: React.FC = () => {
             >
               Settings
             </button>
-            <button className="user-settings-button">Share</button>
+            <button className="user-settings-button" onClick={handleShareProfile}>Share</button>
             <button
               className="user-logout-button"
               onClick={handleLogout}
