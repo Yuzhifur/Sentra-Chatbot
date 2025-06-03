@@ -1,4 +1,4 @@
-# Sentra: Immersive AI Roleplay Chatbots V1.1.2
+# Sentra: Immersive AI Roleplay Chatbots V1.1.3
 
 **Sentra** is a web application that enables users to chat with AI chatbots designed to roleplay as characters from literature, games, movies—or even completely original characters written by users. Sentra aims to deliver realistic, engaging roleplay experiences, making conversations with AI characters feel like interactions with living beings.
 
@@ -157,7 +157,7 @@ Firestore Database
 
 ---
 
-## 🧪 Current Available Use Cases (June 1st, 2025, V1.1.2)
+## 🧪 Current Available Use Cases (June 2nd, 2025, V1.1.3)
 
 Sentra supports the following key features and workflows for users:
 
@@ -239,6 +239,15 @@ Sentra supports the following key features and workflows for users:
   - Generate an avatar based on filled information in character edit page
   - Requires minimum character information to be filled
 
+### 11. 💭 Cross-Friends Memory (CFM)
+- **What is CFM?**: Characters may have shared memory with the user and user's friends
+  - When invoked, the character may describe memories with at most 3 friends.
+- **Enable CFM**: Users can enable CFM in each chat in chat settings
+  - CFM enabled chats will be stored as current character's memories for user's friends to access
+  - Once CFM is enabled for a chat, it can't be undone.
+- **Invoke CFM**: Users can invoke CFM in a chat by using the @ keyword
+  - Users can type @username to select at most 3 friends.
+  - Character's next response will include memories from mentioned friends.
 ---
 
 ## 🛠️ Tech Stack
