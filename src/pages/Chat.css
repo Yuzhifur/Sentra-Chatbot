@@ -518,3 +518,34 @@
     font-size: 0.875rem;
   }
 }
+
+/* Mention styles in messages */
+.chat-message-content .mention {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.chat-message-content .mention.valid {
+  color: var(--brand-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.chat-message-content .mention.valid:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* For user messages with mentions */
+.chat-message-user .mention.valid {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* Dark mode adjustments */
+.dark-mode .chat-message-content .mention.valid {
+  color: var(--brand-secondary);
+}
